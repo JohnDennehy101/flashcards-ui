@@ -1,5 +1,63 @@
 @import "tailwindcss";
 
 @theme {
-  --font-script: Great Vibes, cursive;
+    --font-script: Great Vibes, cursive;
+    --font-poppins: Poppins, sans-serif;
+
+    --color-neutral0: #FFFFFF;
+    --color-neutral100: #F7F3F0;
+    --color-neutral600: #6D5B4D;
+    --color-neutral900: #2E1401;
+
+    --color-pink400: #FC8AE5;
+    --color-pink500: #F073A3;
+    --color-pink700: #E11966;
+
+    --color-teal400: #47D9C9;
+    --color-blue400: #92ADEB;
+    --color-blue600: #5072C7;
+
+    --color-yellow500: #F8CB46;
+
+    --font-size-preset1: 40px;
+    --font-size-preset1--line-height: 1.2;
+    --font-size-preset1--letter-spacing: 0;
+
+    --font-size-preset4-semibold: 16px;
+    --font-size-preset4-semibold--line-height: 1.2;
+    --font-size-preset4-semibold--letter-spacing: 0;
+    --font-size-preset4-semibold--font-weight: 600;
+
+    --radius-0: 0px;
+    --radius-4: 4px;
+    --radius-6: 6px;
+    --radius-8: 8px;
+    --radius-10: 10px;
+    --radius-12: 12px;
+    --radius-16: 16px;
+    --radius-20: 20px;
+    --radius-24: 24px;
+    --radius-full: 999px;
+
+    --spacing-0: 0px;
+    --spacing-25: 2px;
+    --spacing-50: 4px;
+    --spacing-75: 6px;
+    --spacing-100: 8px;
+    --spacing-125: 10px;
+    --spacing-150: 12px;
+    --spacing-200: 16px;
+    --spacing-250: 20px;
+    --spacing-300: 24px;
+    --spacing-400: 32px;
+    --spacing-500: 40px;
+    --spacing-600: 48px;
+    --spacing-800: 64px;
+    --spacing-1000: 80px;
+    --spacing-1200: 96px;
+    --spacing-1400: 112px;
+    --spacing-1600: 128px;
+    --spacing-1800: 140px;
 }
+
+
