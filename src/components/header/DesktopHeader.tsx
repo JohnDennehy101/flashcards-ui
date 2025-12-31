@@ -14,7 +14,7 @@ export function DesktopHeader(): JSX.Element {
 
                 <nav className="flex rounded-full bg-neutral100 border-1 border-neutral900 fill-neutral0  p-1 w-65">
                     <NavLink
-                        to="/option-one"
+                        to="/study"
                         className={({ isActive }) =>
                             `${baseStyles} ${isActive ? activeStyles : inactiveStyles}`
                         }
