@@ -7,14 +7,14 @@ import {MobileHeader} from "./components/header/MobileHeader.tsx";
 function App(): JSX.Element {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50">
-          <div className="hidden md:block">
+      <div className="min-h-screen bg-neutral100 flex flex-col">
+          <div className="hidden lg:block">
           <DesktopHeader />
           </div>
-          <div className="block md:hidden">
+          <div className="block lg:hidden">
               <MobileHeader />
           </div>
-        <main className="w-full h-screen py-6 px-4 flex items-center justify-center">
+        <main className="flex-1 flex">
           <Routes>
             {routes.map(route => (
               <Route

@@ -19,14 +19,34 @@
 
     --color-yellow500: #F8CB46;
 
-    --font-size-preset1: 40px;
-    --font-size-preset1--line-height: 1.2;
-    --font-size-preset1--letter-spacing: 0;
+    --text-preset1: 40px;
+    --text-preset1--line-height: 1.2;
+    --text-preset1--letter-spacing: 0;
+
+    --text-preset1-tablet: 32px;
+    --text-preset1-tablet--line-height: 1.2;
+    --text-preset1-tablet--letter-spacing: 0;
+
+    --text-preset1-mobile: 24px;
+    --text-preset1-mobile--line-height: 1.2;
+    --text-preset1-mobile--letter-spacing: 0;
+
+    --text-preset2: 24px;
+    --text-preset2--line-height: 1.2;
+    --text-preset2--letter-spacing: 0;
 
     --font-size-preset4-semibold: 16px;
     --font-size-preset4-semibold--line-height: 1.2;
     --font-size-preset4-semibold--letter-spacing: 0;
     --font-size-preset4-semibold--font-weight: 600;
+
+    --text-preset5: 14px;
+    --text-preset5--line-height: 1.4;
+    --text-preset5--letter-spacing: 0;
+
+    --text-preset6: 12px;
+    --text-preset6--line-height: 1.2;
+    --text-preset6--letter-spacing: 0;
 
     --radius-0: 0px;
     --radius-4: 4px;

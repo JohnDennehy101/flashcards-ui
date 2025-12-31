@@ -9,12 +9,11 @@ export function MobileHeader(): JSX.Element {
 
     return (
         <header className="w-full bg-neutral100 border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex justify-between items-center px-4">
+            <div className="flex justify-between items-center md:px-4">
                 <Logo className="w-10 h-10 fill-current" />
-
                 <nav className="flex rounded-full bg-neutral100 border-1 border-neutral900 fill-neutral0  p-1 w-65">
                     <NavLink
-                        to="/option-one"
+                        to="/study"
                         className={({ isActive }) =>
                             `${baseStyles} ${isActive ? activeStyles : inactiveStyles}`
                         }
