@@ -22,7 +22,7 @@ export function MobileHeader(): JSX.Element {
                     </NavLink>
 
                     <NavLink
-                        to="/option-two"
+                        to="/list"
                         className={({ isActive }) =>
                             `${baseStyles} ${isActive ? activeStyles : inactiveStyles}`
                         }
