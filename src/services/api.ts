@@ -1,40 +1,64 @@
-const BASE_URL = "http://localhost:4000/v1";
+import { LoginFormValues } from "../schemas/login.ts"
 
-// Hardcoded for testing - DO NOT COMMIT
-const DEV_TOKEN = "###";
+const BASE_URL = "http://localhost:4000/v1"
 
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
-    const headers = new Headers(options.headers);
-    headers.set("Content-Type", "application/json");
+  const headers = new Headers(options.headers)
+  headers.set("Content-Type", "application/json")
 
-    headers.set("Authorization", `Bearer ${DEV_TOKEN}`);
+  const token = localStorage.getItem("auth_token")
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`)
+  }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-        ...options,
-        headers,
-    });
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  })
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Request failed with status ${response.status}`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+
+    if (response.status === 401) {
+      localStorage.removeItem("auth_token")
+      window.location.href = "/login"
     }
 
-    return response;
+    throw new Error(
+      errorData.error || `Request failed with status ${response.status}`,
+    )
+  }
+
+  return response
 }
 
 export const apiService = {
-    async getAll(params?: { section?: string; categories?: string[] }) {
-        const query = new URLSearchParams();
-        if (params?.section) query.append("section", params.section);
-        if (params?.categories) query.append("categories", params.categories.join(","));
+  async login(credentials: LoginFormValues) {
+    const res = await apiRequest("/tokens/authentication", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    })
 
-        const res = await apiRequest(`/flashcards?${query.toString()}`);
-        return await res.json(); // returns { flashcards: [], metadata: {} }
-    },
+    const data = await res.json()
 
-    async getById(id: string | number) {
-        const res = await apiRequest(`/flashcards/${id}`);
-        const data = await res.json();
-        return data.flashcard;
+    if (data.authentication_token?.token) {
+      localStorage.setItem("auth_token", data.authentication_token.token)
     }
-};
+
+    return data
+  },
+  async getAll(params?: { section?: string; categories?: string[] }) {
+    const query = new URLSearchParams()
+    if (params?.section) query.append("section", params.section)
+    if (params?.categories)
+      query.append("categories", params.categories.join(","))
+
+    const res = await apiRequest(`/flashcards?${query.toString()}`)
+    return await res.json() // returns { flashcards: [], metadata: {} }
+  },
+  async getById(id: string | number) {
+    const res = await apiRequest(`/flashcards/${id}`)
+    const data = await res.json()
+    return data.flashcard
+  },
+}
