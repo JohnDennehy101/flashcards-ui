@@ -8,77 +8,109 @@ import TickIcon from "../../assets/images/icon-circle-check.svg?react"
 import ResetProgressIcon from "../../assets/images/icon-reset.svg?react";
 
 interface FlashcardDisplayProps {
+    type: 'qa' | 'mcq' | 'yes_no';
+    content: any;
     question: string;
-    answer: string;
+    category: string;
     currentStep: number;
     totalSteps: number;
-    category: string;
     showAnswer: boolean;
     onToggle: () => void;
 }
 
 export function FlashcardDisplay({
+                                     type,
+                                     content,
                                      question,
-                                     answer,
                                      category,
                                      currentStep,
                                      totalSteps,
                                      showAnswer,
                                      onToggle,
                                  }: FlashcardDisplayProps): JSX.Element {
+
+    const getFormattedAnswer = () => {
+        if (!content) return "";
+        switch (type) {
+            case 'qa': return content.answer;
+            case 'yes_no': return `${content.correct ? "YES" : "NO"} — ${content.justification || ""}`;
+            case 'mcq': return content.options?.[content.correct_index] || "";
+            default: return "";
+        }
+    };
+
+    const isMcq = type === 'mcq';
+
+    const questionTextSize = isMcq
+        ? "text-[20px] md:text-[24px] lg:text-[28px]"
+        : "text-preset1-mobile md:text-preset1-tablet lg:text-preset1";
+
     const backgroundCardColor = showAnswer ? "bg-blue400" : "bg-pink400";
 
+    const containerHeight = type === 'mcq' ? "h-[460px]" : "h-[400px]";
+
     return (
-        <div className="bg-neutral0 h-[360px] lg:h-5/7 w-full px-5 py-5 flex flex-col">
+        <div className={`bg-neutral0 ${containerHeight} w-full px-5 py-5 flex flex-col transition-all duration-300`}>
             <div
                 onClick={onToggle}
-                className={`relative w-full h-full flex flex-col items-center justify-center border border-neutral900 rounded-[20px] cursor-pointer overflow-hidden transition-colors duration-300 ${backgroundCardColor}`}
+                className={`relative w-full h-full flex flex-col border border-neutral900 rounded-[20px] cursor-pointer overflow-hidden transition-colors duration-300 ${backgroundCardColor}`}
             >
-                <Button
-                    onClick={(e) => e.stopPropagation()}
-                    text={category}
-                    className="absolute top-6 text-preset6 font-poppins hover:translate-y-0 hover:shadow-none cursor-default z-10"
-                />
+                <div className="absolute top-6 w-full flex justify-center z-20">
+                    <Button
+                        onClick={(e) => e.stopPropagation()}
+                        text={category}
+                        className="text-preset6 font-poppins hover:translate-y-0 hover:shadow-none cursor-default"
+                    />
+                </div>
 
-                <div className="absolute top-10 right-10 transition-transform duration-500">
+                <div className="absolute top-10 right-10 transition-transform duration-500 z-10">
                     {showAnswer ? <PatternStarPinkIcon /> : <PatternStarBlueIcon />}
                 </div>
 
-                <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative w-full h-full flex flex-col items-center">
 
-                    <div className="absolute flex flex-col items-center">
-                        <p className={`text-preset1-mobile md:text-preset1-tablet lg:text-preset1 font-poppins text-neutral900 px-16 text-center transition-all
-              ${showAnswer
-                            ? "translate-y-8 opacity-0 duration-200 pointer-events-none"
-                            : "translate-y-0 opacity-100 duration-200"}`}
-                        >
-                            {question}
-                        </p>
+                    <div className={`absolute inset-0 flex flex-col items-center px-6 transition-all duration-200
+    ${showAnswer ? "translate-y-8 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}
+    ${type === 'mcq' ? "justify-start pt-18" : "justify-center"}`}
+                    >
+                        <div className={`w-full flex items-center justify-center ${type === 'mcq' ? 'mb-2' : ''}`}>
+                            <p className={`${questionTextSize} font-poppins text-neutral900 text-center leading-[1.1]`}>
+                                {question}
+                            </p>
+                        </div>
 
-                        <p className={`text-preset4 font-poppins text-neutral900 px-16 py-4 text-center transition-all
-              ${showAnswer
-                            ? "-translate-y-12 opacity-0 duration-200"
-                            : "translate-y-0 opacity-100 duration-200"}`}
-                        >
-                            {"Click to reveal answer"}
-                        </p>
+                        {type === 'mcq' ? (
+                            <>
+                                <div className="w-full flex flex-col gap-1.5 z-20">
+                                    {content.options?.slice(0, 4).map((opt: string, i: number) => (
+                                        <div key={i} className="w-full px-4 py-1.5 border border-neutral900/15 rounded-12 bg-neutral0/20">
+                                            <p className="text-[11px] md:text-[12px] font-poppins text-center leading-tight text-neutral900">
+                                                {opt}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                                {!isMcq && <div className="absolute bottom-12 w-full flex justify-center pointer-events-none">
+                                    <p className="text-preset4 font-poppins text-neutral900 text-center">
+                                        {"Click to reveal answer"}
+                                    </p>
+                                </div>}
+                            </>
+                        ) : (
+                            <p className="text-preset4 font-poppins text-neutral900 text-center mt-4">
+                                {"Click to reveal answer"}
+                            </p>
+                        )}
                     </div>
 
-                    <div className="absolute flex flex-col items-center pointer-events-none">
-                        <p className={`text-preset4 font-poppins text-neutral900 text-center transition-all
-              ${showAnswer
-                            ? "translate-y-0 opacity-100 duration-200"
-                            : "translate-y-12 opacity-0 duration-0"}`}
-                        >
+                    <div className={`absolute inset-0 flex flex-col items-center justify-center px-10 transition-all pointer-events-none
+                        ${showAnswer ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+                    >
+                        <p className="text-preset4 font-poppins text-neutral900 text-center">
                             {"Answer:"}
                         </p>
-
-                        <p className={`text-preset2 font-poppins text-neutral900 px-16 py-4 text-center transition-all
-              ${showAnswer
-                            ? "translate-y-0 opacity-100 duration-200"
-                            : "translate-y-4 opacity-0 duration-0"}`}
-                        >
-                            {answer}
+                        <p className="text-preset2 font-poppins text-neutral900 py-4 text-center leading-tight">
+                            {getFormattedAnswer()}
                         </p>
                     </div>
                 </div>
@@ -87,17 +119,14 @@ export function FlashcardDisplay({
                     <ProgressBar current={currentStep} total={totalSteps} />
                 </div>
 
-                <div
-                    className={`absolute bottom-10 transition-all duration-300 ease-in-out
-            ${showAnswer ? "left-6" : "left-10"}`}
-                >
+                <div className={`absolute bottom-10 transition-all duration-300 ease-in-out ${showAnswer ? "left-6" : "left-10"}`}>
                     <PatternStarYellowIcon />
                 </div>
             </div>
 
-            <div className="flex flex-row gap-5 pt-5 items-center justify-center">
-                <Button text={"I Know This"} onClick={() => {}} iconPosition={"start"} icon={<TickIcon />} className="bg-yellow500" />
-                <Button text={"Reset Progress"} onClick={() => {}} iconPosition={"start"} icon={<ResetProgressIcon />}  />
+            <div className="flex flex-row gap-5 pt-5 items-center justify-center shrink-0">
+                <Button text={"I Know This"} onClick={(e) => e.stopPropagation()} iconPosition={"start"} icon={<TickIcon />} className="bg-yellow500" />
+                <Button text={"Reset Progress"} onClick={(e) => e.stopPropagation()} iconPosition={"start"} icon={<ResetProgressIcon />} />
             </div>
         </div>
     );
