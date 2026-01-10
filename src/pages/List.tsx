@@ -1,4 +1,4 @@
-import {JSX, useState, useEffect} from "react";
+import {JSX, useState} from "react";
 import {FlashcardForm} from "../components/forms/FlashcardForm"
 import {Button} from "../components/buttons/Button.tsx";
 import PlusIcon from "../assets/images/icon-circle-plus.svg?react"
@@ -6,28 +6,11 @@ import CrossIcon from "../assets/images/icon-cross.svg?react"
 import ShuffleIcon from "../assets/images/icon-shuffle.svg?react"
 import ChevronDownIcon from "../assets/images/icon-chevron-down.svg?react"
 import {Card} from "../components/cards/Card.tsx";
-import {apiService} from "../services/api.ts";
+import {useFlashcards} from "../context/FlashcardContext.tsx";
 
 export function List(): JSX.Element {
     const [showAddCard, setShowAddCard] = useState(false);
-    const [flashcards, setFlashcards] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchCards = async () => {
-            try {
-                setIsLoading(true);
-                const data = await apiService.getAll();
-                setFlashcards(data.flashcards);
-            } catch (error) {
-                console.error("Failed to fetch cards:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchCards();
-    }, []);
+    const { flashcards, isLoading, error } = useFlashcards();
 
     const getAnswerPreview = (card: any): string => {
         const content = card.flashcard_content;
@@ -77,7 +60,7 @@ export function List(): JSX.Element {
                             question={card.question}
                             answer={getAnswerPreview(card)}
                             category={card.categories?.[0] || "General"}
-                            progress={0}
+                            progress={card.correct_count ?? 0}
                         />
                     ))
                 )}

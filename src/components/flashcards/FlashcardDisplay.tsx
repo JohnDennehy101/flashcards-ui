@@ -16,6 +16,8 @@ interface FlashcardDisplayProps {
     totalSteps: number;
     showAnswer: boolean;
     onToggle: () => void;
+    onReview: (e: React.MouseEvent) => Promise<void>;
+    onReset: (e: React.MouseEvent) => Promise<void>;
 }
 
 export function FlashcardDisplay({
@@ -27,6 +29,8 @@ export function FlashcardDisplay({
                                      totalSteps,
                                      showAnswer,
                                      onToggle,
+                                     onReview,
+                                     onReset
                                  }: FlashcardDisplayProps): JSX.Element {
 
     const getFormattedAnswer = () => {
@@ -125,8 +129,8 @@ export function FlashcardDisplay({
             </div>
 
             <div className="flex flex-row gap-5 pt-5 items-center justify-center shrink-0">
-                <Button text={"I Know This"} onClick={(e) => e.stopPropagation()} iconPosition={"start"} icon={<TickIcon />} className="bg-yellow500" />
-                <Button text={"Reset Progress"} onClick={(e) => e.stopPropagation()} iconPosition={"start"} icon={<ResetProgressIcon />} />
+                <Button text={"I Know This"} onClick={onReview} iconPosition={"start"} icon={<TickIcon />} className="bg-yellow500" />
+                <Button text={"Reset Progress"} onClick={onReset} iconPosition={"start"} icon={<ResetProgressIcon />} />
             </div>
         </div>
     );

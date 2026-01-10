@@ -7,26 +7,31 @@ export const routes = [
     {
         path: '/',
         element: <Home />,
-        showHeader: true
+        showHeader: true,
+        protected: false
     },
     {
         path: '/study/:id',
         element: <Study />,
-        showHeader: true
+        showHeader: true,
+        protected: true
     },
     {
         path: '/study',
         element: <Study /> ,
-        showHeader: true
+        showHeader: true,
+        protected: true
     },
     {
         path: '/list',
         element: <List />,
-        showHeader: true
+        showHeader: true,
+        protected: true
     },
     {
         path: '/login',
         element: <Login />,
-        showHeader: false
+        showHeader: false,
+        protected: false
     }
 ]
