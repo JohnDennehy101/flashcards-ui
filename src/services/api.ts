@@ -61,4 +61,22 @@ export const apiService = {
     const data = await res.json()
     return data.flashcard
   },
+  async getStats() {
+    const res = await apiRequest(`/stats/flashcards`)
+    const data = await res.json()
+    return data.stats
+  },
+  async review(id: string | number) {
+    const res = await apiRequest(`/flashcards/${id}/review`, {
+      method: "POST",
+    })
+    return await res.json()
+  },
+
+  async reset(id: string | number) {
+    const res = await apiRequest(`/flashcards/${id}/reset`, {
+      method: "POST",
+    })
+    return await res.json()
+  },
 }

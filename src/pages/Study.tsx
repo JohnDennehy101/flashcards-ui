@@ -1,34 +1,102 @@
-import {JSX, useState, useEffect} from "react";
-import { useParams } from "react-router-dom";
+import { JSX, useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useFlashcards } from "../context/FlashcardContext";
 import StatsTotalIcon from "../assets/images/icon-stats-total.svg?react";
 import StatsInProgressIcon from "../assets/images/icon-stats-in-progress.svg?react";
 import StatsMasteredIcon from "../assets/images/icon-stats-mastered.svg?react";
 import StatsNotStartedIcon from "../assets/images/icon-stats-not-started.svg?react";
-import {StatsItem} from "../components/stats/StatsItem.tsx";
-import {FlashcardDisplay} from "../components/flashcards/FlashcardDisplay.tsx";
-import {FlashcardHeader} from "../components/flashcards/FlashcardHeader.tsx";
-import {FlashcardFooter} from "../components/flashcards/FlashcardFooter.tsx";
-import {apiService} from "../services/api.ts";
-
+import { StatsItem } from "../components/stats/StatsItem.tsx";
+import { FlashcardDisplay } from "../components/flashcards/FlashcardDisplay.tsx";
+import { FlashcardHeader } from "../components/flashcards/FlashcardHeader.tsx";
+import { FlashcardFooter } from "../components/flashcards/FlashcardFooter.tsx";
+import { apiService } from "../services/api.ts";
 
 export function Study(): JSX.Element {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+
+    const { flashcards, stats, isLoading: contextLoading, refreshData } = useFlashcards();
+
     const [showAnswer, setShowAnswer] = useState(false);
     const [card, setCard] = useState<any>(null);
-    const [error, setError] = useState(null);
-    const { id } = useParams<{ id: string }>();
+    const [isFetchingCard, setIsFetchingCard] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        setShowAnswer(false);
+        async function loadCardDetails() {
+            if (!id) return;
+            try {
+                setIsFetchingCard(true);
+                setShowAnswer(false);
+                setError(null);
 
-        if (id) {
-            apiService.getById(id)
-                .then(setCard)
-                .catch(err => setError(err.message));
+                const cardData = await apiService.getById(id);
+                setCard(cardData);
+            } catch (err: any) {
+                console.error("Failed to load card", err);
+                setError(err.message || "Failed to load card content");
+            } finally {
+                setIsFetchingCard(false);
+            }
         }
+
+        loadCardDetails();
     }, [id]);
 
+    const handleNavigation = (direction: 'next' | 'prev') => {
+        if (!flashcards.length) return;
+
+        const currentIndex = flashcards.findIndex(f => f.id === Number(id));
+        if (currentIndex === -1) return;
+
+        let nextIndex;
+        if (direction === 'next') {
+            nextIndex = (currentIndex + 1) % flashcards.length;
+        } else {
+            nextIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
+        }
+
+        navigate(`/study/${flashcards[nextIndex].id}`);
+    };
+
     if (error) return <div className="p-10 text-red-500">Error: {error}</div>;
-    if (!card) return <div className="p-10">Loading...</div>;
+    if (contextLoading || isFetchingCard || !card) return <div className="p-10">Loading study session...</div>;
+
+    const currentPos = flashcards.findIndex(f => f.id === Number(id)) + 1;
+
+    const handleReview = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            await apiService.review(id!);
+            await refreshData(true);
+            handleNavigation('next');
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleReset = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        if (!window.confirm("Are you sure you want to reset your progress for this card?")) {
+            return;
+        }
+
+        try {
+            await apiService.reset(id!);
+
+            setCard((prev: any) => ({
+                ...prev,
+                correct_count: 0
+            }));
+            
+            await refreshData(true);
+
+        } catch (err) {
+            console.error("Failed to reset progress:", err);
+            alert("Failed to reset progress. Please try again.");
+        }
+    };
 
     return (
         <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[631px] w-full lg:px-24 md:px-8 px-4 py-4">
@@ -36,7 +104,7 @@ export function Study(): JSX.Element {
                 <FlashcardHeader selectedCategory={"All Categories"} />
 
                 <FlashcardDisplay
-                    currentStep={1}
+                    currentStep={card.correct_count ?? 0}
                     totalSteps={5}
                     category={card.categories?.[0] ?? "General"}
                     type={card.flashcard_type}
@@ -44,25 +112,27 @@ export function Study(): JSX.Element {
                     question={card.question}
                     showAnswer={showAnswer}
                     onToggle={() => setShowAnswer(!showAnswer)}
+                    onReview={handleReview}
+                    onReset={handleReset}
                 />
 
                 <FlashcardFooter
-                    currentCard={card.id}
-                    totalCards={40}
-                    onPrevious={() => {}}
-                    onNext={() => {}}
+                    currentCard={currentPos}
+                    totalCards={flashcards.length}
+                    onPrevious={() => handleNavigation('prev')}
+                    onNext={() => handleNavigation('next')}
                 />
             </div>
 
             <div className="bg-neutral0 lg:w-1/3 w-full h-fit lg:h-full lg:items-stretch px-6 py-5 rounded-16 border-1 border-neutral900 overflow-hidden flex-col gap-4">
                 <h2 className="text-preset2 font-poppins text-neutral-900 mb-4">Study Statistics</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4 flex-1 lg:flex lg:flex-col lg:justify-between">
-                    <StatsItem label={"Total Cards"} value={40} icon={<StatsTotalIcon />} iconBgColor={"bg-blue400"} />
-                    <StatsItem label={"Mastered"} value={11} icon={<StatsMasteredIcon />} iconBgColor={"bg-teal400"} />
-                    <StatsItem label={"In Progress"} value={21} icon={<StatsInProgressIcon />} iconBgColor={"bg-pink500"} />
-                    <StatsItem label={"Not Started"} value={8} icon={<StatsNotStartedIcon />} iconBgColor={"bg-pink400"} />
+                    <StatsItem label={"Total Cards"} value={stats?.total ?? 0} icon={<StatsTotalIcon />} iconBgColor={"bg-blue400"} />
+                    <StatsItem label={"Mastered"} value={stats?.mastered ?? 0} icon={<StatsMasteredIcon />} iconBgColor={"bg-teal400"} />
+                    <StatsItem label={"In Progress"} value={stats?.in_progress ?? 0} icon={<StatsInProgressIcon />} iconBgColor={"bg-pink500"} />
+                    <StatsItem label={"Not Started"} value={stats?.not_started ?? 0} icon={<StatsNotStartedIcon />} iconBgColor={"bg-pink400"} />
                 </div>
             </div>
         </div>
-    )
+    );
 }
