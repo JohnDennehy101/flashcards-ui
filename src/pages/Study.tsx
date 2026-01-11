@@ -1,4 +1,4 @@
-import { JSX, useState, useEffect } from "react";
+import {JSX, useState, useEffect, useMemo} from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useFlashcards } from "../context/FlashcardContext";
 import StatsTotalIcon from "../assets/images/icon-stats-total.svg?react";
@@ -10,17 +10,27 @@ import { FlashcardDisplay } from "../components/flashcards/FlashcardDisplay.tsx"
 import { FlashcardHeader } from "../components/flashcards/FlashcardHeader.tsx";
 import { FlashcardFooter } from "../components/flashcards/FlashcardFooter.tsx";
 import { apiService } from "../services/api.ts";
+import {CategoryDropdown} from "../components/dropdowns/CategoryDropdown.tsx";
 
 export function Study(): JSX.Element {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const { flashcards, stats, isLoading: contextLoading, refreshData } = useFlashcards();
+    const { flashcards, stats, isLoading: contextLoading, refreshData, categories } = useFlashcards();
 
     const [showAnswer, setShowAnswer] = useState(false);
     const [card, setCard] = useState<any>(null);
     const [isFetchingCard, setIsFetchingCard] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showCategories, setShowCategories] = useState(false);
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+    const filteredFlashcards = useMemo(() => {
+        if (selectedCategories.length === 0) return flashcards;
+        return flashcards.filter(card =>
+            card.categories?.some((cat: string) => selectedCategories.includes(cat))
+        );
+    }, [flashcards, selectedCategories]);
 
     useEffect(() => {
         async function loadCardDetails() {
@@ -44,25 +54,37 @@ export function Study(): JSX.Element {
     }, [id]);
 
     const handleNavigation = (direction: 'next' | 'prev') => {
-        if (!flashcards.length) return;
+        if (!filteredFlashcards.length) return;
 
-        const currentIndex = flashcards.findIndex(f => f.id === Number(id));
-        if (currentIndex === -1) return;
+        const currentIndex = filteredFlashcards.findIndex(f => f.id === Number(id));
+
+        if (currentIndex === -1) {
+            navigate(`/study/${filteredFlashcards[0].id}`);
+            return;
+        }
 
         let nextIndex;
         if (direction === 'next') {
-            nextIndex = (currentIndex + 1) % flashcards.length;
+            nextIndex = (currentIndex + 1) % filteredFlashcards.length;
         } else {
-            nextIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
+            nextIndex = (currentIndex - 1 + filteredFlashcards.length) % filteredFlashcards.length;
         }
 
-        navigate(`/study/${flashcards[nextIndex].id}`);
+        navigate(`/study/${filteredFlashcards[nextIndex].id}`);
+    };
+
+    const toggleCategory = (categoryName: string) => {
+        setSelectedCategories(prev =>
+            prev.includes(categoryName)
+                ? prev.filter(c => c !== categoryName)
+                : [...prev, categoryName]
+        );
     };
 
     if (error) return <div className="p-10 text-red-500">Error: {error}</div>;
     if (contextLoading || isFetchingCard || !card) return <div className="p-10">Loading study session...</div>;
 
-    const currentPos = flashcards.findIndex(f => f.id === Number(id)) + 1;
+    const currentPos = filteredFlashcards.findIndex(f => f.id === Number(id)) + 1;
 
     const handleReview = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -101,7 +123,21 @@ export function Study(): JSX.Element {
     return (
         <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[631px] w-full lg:px-24 md:px-8 px-4 py-4">
             <div className="bg-neutral0 lg:w-2/3 h-fit lg:h-full flex items-center justify-center flex-col w-full border-1 border-neutral900 rounded-20 overflow-hidden">
-                <FlashcardHeader selectedCategory={"All Categories"} />
+                <FlashcardHeader
+                    selectedCategory={selectedCategories.length > 0 ? `${selectedCategories.length} Selected` : "All Categories"}
+                    onCategoryClick={() => setShowCategories(!showCategories)}
+                >
+                    {showCategories && (
+                        <div className="absolute top-full left-0 z-50 mt-2">
+                            <CategoryDropdown
+                                categories={categories}
+                                selectedCategories={selectedCategories}
+                                onToggle={toggleCategory}
+                                onClear={() => setSelectedCategories([])}
+                            />
+                        </div>
+                    )}
+                </FlashcardHeader>
 
                 <FlashcardDisplay
                     currentStep={card.correct_count ?? 0}
@@ -118,7 +154,7 @@ export function Study(): JSX.Element {
 
                 <FlashcardFooter
                     currentCard={currentPos}
-                    totalCards={flashcards.length}
+                    totalCards={filteredFlashcards.length}
                     onPrevious={() => handleNavigation('prev')}
                     onNext={() => handleNavigation('next')}
                 />

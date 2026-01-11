@@ -129,8 +129,8 @@ export function FlashcardDisplay({
             </div>
 
             <div className="flex flex-row gap-5 pt-5 items-center justify-center shrink-0">
-                <Button text={"I Know This"} onClick={onReview} iconPosition={"start"} icon={<TickIcon />} className="bg-yellow500" />
-                <Button text={"Reset Progress"} onClick={onReset} iconPosition={"start"} icon={<ResetProgressIcon />} />
+                <Button text={"I Know This"} onClick={onReview} iconPosition={"start"} icon={<TickIcon />} className="bg-yellow500 cursor-pointer" />
+                <Button text={"Reset Progress"} onClick={onReset} iconPosition={"start"} icon={<ResetProgressIcon />} className="cursor-pointer" />
             </div>
         </div>
     );

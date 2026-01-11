@@ -24,7 +24,7 @@ export function FlashcardFooter({
                     onClick={onPrevious}
                     iconPosition={"start"}
                     icon={<ChevronLeftIcon />}
-                    className="w-10 h-10 sm:overflow-hidden md:w-auto md:h-auto md:overflow-visible"
+                    className="w-10 h-10 sm:overflow-hidden md:w-auto md:h-auto md:overflow-visible cursor-pointer"
                 />
 
                 <p className="text-preset5 text-neutral600 font-poppins">
@@ -36,7 +36,7 @@ export function FlashcardFooter({
                     onClick={onNext}
                     iconPosition={"end"}
                     icon={<ChevronRightIcon />}
-                    className="w-10 h-10 sm:overflow-hidden md:w-auto md:h-auto md:overflow-visible"
+                    className="w-10 h-10 sm:overflow-hidden md:w-auto md:h-auto md:overflow-visible cursor-pointer"
                 />
             </div>
         </div>
