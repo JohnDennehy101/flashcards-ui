@@ -79,4 +79,9 @@ export const apiService = {
     })
     return await res.json()
   },
+
+  async getCategories() {
+    const response = await apiRequest(`/categories`)
+    return await response.json()
+  },
 }

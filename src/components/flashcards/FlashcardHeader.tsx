@@ -15,17 +15,22 @@ export function FlashcardHeader({
                                     onShuffleClick = () => {},
                                     onHideMasteredChange = () => {},
                                     selectedCategory = "All Categories",
-                                }: FlashcardHeaderProps): JSX.Element {
+    children
+                                }: FlashcardHeaderProps & { children?: React.ReactNode }): JSX.Element {
     return (
         <div className="bg-neutral0 lg:h-1/7 w-full border-b-1 border-neutral900">
             <div className="h-full w-full px-5 py-5 flex items-center justify-between">
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                    <div className="relative">
                     <Button
                         text={selectedCategory}
                         onClick={onCategoryClick}
                         iconPosition={"end"}
                         icon={<ChevronDownIcon />}
+                        className="cursor-pointer"
                     />
+                        {children}
+                    </div>
 
                     <label className="flex items-center gap-2 cursor-pointer group">
                         <input
@@ -45,6 +50,7 @@ export function FlashcardHeader({
                         onClick={onShuffleClick}
                         iconPosition={"start"}
                         icon={<ShuffleIcon />}
+                        className="cursor-pointer"
                     />
                 </div>
             </div>

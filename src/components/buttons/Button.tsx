@@ -34,7 +34,7 @@ export function Button({
 
 
     const variants = {
-        primary: `bg-neutral0 text-neutral900 shadow-sm hover:translate-y-[-1px] ${paddedStyles}`,
+        primary: `bg-neutral0 text-neutral900 shadow-sm  ${paddedStyles}`,
         secondary: `bg-white text-neutral900 hover:bg-neutral100 ${paddedStyles}`,
         icon: "bg-transparent shadow-none border-none px-0 py-0",
         menu: "cursor-pointer w-full justify-start px-4 py-3 hover:bg-neutral100 text-preset5 text-neutral700 transition-colors",
