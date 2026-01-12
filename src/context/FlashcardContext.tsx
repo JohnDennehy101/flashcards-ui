@@ -1,4 +1,13 @@
-import React, {createContext, useContext, useState, useEffect, useCallback, useRef} from 'react';
+import React, {
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    useCallback,
+    useRef,
+    Dispatch,
+    SetStateAction
+} from 'react';
 import { apiService } from '../services/api';
 
 interface FlashcardStats {
@@ -8,7 +17,7 @@ interface FlashcardStats {
     not_started: number;
 }
 
-interface Category {
+export interface Category {
     name: string;
     count: number;
 }
@@ -20,16 +29,22 @@ interface FlashcardContextType {
     isLoading: boolean;
     error: string | null;
     refreshData: (force?: boolean) => Promise<void>;
+    selectedCategories: Category[];
+    setSelectedCategories: Dispatch<SetStateAction<Category[]>>;
+    hideMastered: boolean;
+    setHideMastered: Dispatch<SetStateAction<boolean>>;
 }
 
 const FlashcardContext = createContext<FlashcardContextType | undefined>(undefined);
 
 export function FlashcardProvider({ children }: { children: React.ReactNode }) {
     const [flashcards, setFlashcards] = useState<any[]>([]);
-    const [categories, setCategories] = useState<string[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [stats, setStats] = useState<FlashcardStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
+    const [hideMastered, setHideMastered] = useState(false);
 
     const isFetchingRef = useRef(false);
     const hasInitializedRef = useRef(false);
@@ -76,7 +91,11 @@ export function FlashcardProvider({ children }: { children: React.ReactNode }) {
             stats,
             isLoading,
             error,
-            refreshData: loadData
+            refreshData: loadData,
+            selectedCategories,
+            setSelectedCategories,
+            hideMastered,
+            setHideMastered
         }}>
             {children}
         </FlashcardContext.Provider>

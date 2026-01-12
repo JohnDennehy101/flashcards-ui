@@ -1,6 +1,6 @@
 import {JSX, useState, useEffect, useMemo} from "react";
 import {useParams, useNavigate} from "react-router-dom";
-import {useFlashcards} from "../context/FlashcardContext";
+import {Category, useFlashcards} from "../context/FlashcardContext";
 import StatsTotalIcon from "../assets/images/icon-stats-total.svg?react";
 import StatsInProgressIcon from "../assets/images/icon-stats-in-progress.svg?react";
 import StatsMasteredIcon from "../assets/images/icon-stats-mastered.svg?react";
@@ -16,18 +16,16 @@ export function Study(): JSX.Element {
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const {flashcards, stats, isLoading: contextLoading, refreshData, categories} = useFlashcards();
+    const {flashcards, stats, isLoading: contextLoading, refreshData, categories, selectedCategories, setSelectedCategories, hideMastered, setHideMastered} = useFlashcards();
 
     const [showAnswer, setShowAnswer] = useState(false);
-    const [hideMastered, setHideMastered] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showCategories, setShowCategories] = useState(false);
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
     const filteredFlashcards = useMemo(() => {
         return flashcards.filter(card => {
             const matchesCategory = selectedCategories.length === 0 ||
-                card.categories?.some((cat: string) => selectedCategories.includes(cat));
+                card.categories?.some((cat: Category) => selectedCategories.includes(cat));
 
             const matchesMastery = !hideMastered || card.status !== "mastered";
 
@@ -66,11 +64,16 @@ export function Study(): JSX.Element {
     };
 
     const toggleCategory = (categoryName: string) => {
-        setSelectedCategories(prev =>
-            prev.includes(categoryName)
-                ? prev.filter(c => c !== categoryName)
-                : [...prev, categoryName]
-        );
+        setSelectedCategories((prev: Category[]) => {
+            const isAlreadySelected = prev.some(c => c.name === categoryName);
+
+            if (isAlreadySelected) {
+                return prev.filter(c => c.name !== categoryName);
+            } else {
+                const categoryObject = categories.find(c => c.name === categoryName);
+                return categoryObject ? [...prev, categoryObject] : prev;
+            }
+        });
     };
 
     if (error) return <div className="p-10 text-red-500">Error: {error}</div>;
@@ -117,6 +120,7 @@ export function Study(): JSX.Element {
                 className="bg-neutral0 lg:w-2/3 h-fit lg:h-full flex items-center justify-center flex-col w-full border-1 border-neutral900 rounded-20 overflow-hidden">
                 <FlashcardHeader
                     selectedCategory={selectedCategories.length > 0 ? `${selectedCategories.length} Selected` : "All Categories"}
+                    hideMastered={hideMastered}
                     onCategoryClick={() => setShowCategories(!showCategories)}
                     onHideMasteredChange={(checked: boolean) => setHideMastered(checked)}
                 >
