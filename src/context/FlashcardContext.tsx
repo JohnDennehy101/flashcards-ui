@@ -33,6 +33,8 @@ interface FlashcardContextType {
     setSelectedCategories: Dispatch<SetStateAction<Category[]>>;
     hideMastered: boolean;
     setHideMastered: Dispatch<SetStateAction<boolean>>;
+    setFlashcards: Dispatch<SetStateAction<any[]>>;
+    shuffleCards: () => void;
 }
 
 const FlashcardContext = createContext<FlashcardContextType | undefined>(undefined);
@@ -48,6 +50,19 @@ export function FlashcardProvider({ children }: { children: React.ReactNode }) {
 
     const isFetchingRef = useRef(false);
     const hasInitializedRef = useRef(false);
+
+    const shuffleCards = () => {
+        setFlashcards((prev) => {
+            const shuffled = [...prev];
+
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            return shuffled;
+        });
+    };
 
     const loadData = useCallback(async (force = false) => {
         if (isFetchingRef.current) return;
@@ -95,7 +110,8 @@ export function FlashcardProvider({ children }: { children: React.ReactNode }) {
             selectedCategories,
             setSelectedCategories,
             hideMastered,
-            setHideMastered
+            setHideMastered,
+            shuffleCards
         }}>
             {children}
         </FlashcardContext.Provider>

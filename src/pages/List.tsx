@@ -19,7 +19,8 @@ export function List(): JSX.Element {
         selectedCategories,
         setSelectedCategories,
         hideMastered,
-        setHideMastered
+        setHideMastered,
+        shuffleCards
     } = useFlashcards();
 
     const toggleCategory = (categoryName: string) => {
@@ -101,7 +102,7 @@ export function List(): JSX.Element {
                     </label>
                 </div>
 
-                <Button onClick={() => {}} text={<span className="hidden md:inline">Shuffle</span>} icon={<ShuffleIcon />} iconPosition={"start"} />
+                <Button onClick={shuffleCards} text={<span className="hidden md:inline">Shuffle</span>} icon={<ShuffleIcon />} iconPosition={"start"} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full items-start">
