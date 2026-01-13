@@ -2,6 +2,8 @@ import {JSX} from "react";
 import { useNavigate } from "react-router-dom";
 import {ProgressBar} from "../../components/progress/ProgressBar.tsx";
 import {CardMenu} from "../../components/menus/CardMenu.tsx";
+import {Button} from "../../components/buttons/Button.tsx";
+import MasteredIcon from "../../assets/images/icon-mastered.svg?react"
 
 interface CardProps {
     id: string;
@@ -9,9 +11,10 @@ interface CardProps {
     answer: string;
     category: string;
     progress: number;
+    target: number;
 }
 
-export function Card({ id, question, answer, category, progress }: CardProps) : JSX.Element {
+export function Card({ id, question, answer, category, progress, target }: CardProps) : JSX.Element {
     const navigate = useNavigate();
 
     const handleCardClick = () => {
@@ -32,9 +35,21 @@ export function Card({ id, question, answer, category, progress }: CardProps) : 
             </div>
 
 
-            <div className="flex flex-1 items-center justify-start">
-                <div className="w-full max-w-[80px]">
-                <ProgressBar current={progress} total={5} />
+            <div className="flex flex-1 items-center justify-start min-w-0">
+                <div className="w-fit max-w-full">
+                    {progress < target ? (
+                        <div className="w-20">
+                            <ProgressBar current={progress} total={target} />
+                        </div>
+                    ) : (
+                        <Button
+                            onClick={() => {}}
+                            text={`Mastered ${progress}/${target}`}
+                            className="whitespace-nowrap px-2.5 py-1.5 bg-teal400 text-preset6 font-poppins hover:translate-y-0 hover:shadow-none cursor-default"
+                            iconPosition={"start"}
+                            icon={<MasteredIcon />}
+                        />
+                    )}
                 </div>
             </div>
 

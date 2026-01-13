@@ -22,10 +22,10 @@ export function FlashcardHeader({
     return (
         <div className="bg-neutral0 lg:h-1/7 w-full border-b-1 border-neutral900">
             <div className="h-full w-full px-5 py-5 flex items-center justify-between">
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                <div className="flex flex-row items-center gap-4">
                     <div className="relative">
                     <Button
-                        text={selectedCategory}
+                        text={<span className="hidden md:inline">{selectedCategory}</span>}
                         onClick={onCategoryClick}
                         iconPosition={"end"}
                         icon={<ChevronDownIcon />}
@@ -49,7 +49,7 @@ export function FlashcardHeader({
 
                 <div>
                     <Button
-                        text={"Shuffle"}
+                        text={<span className="hidden md:inline">{"Shuffle"}</span>}
                         onClick={onShuffleClick}
                         iconPosition={"start"}
                         icon={<ShuffleIcon />}

@@ -120,7 +120,7 @@ export function FlashcardDisplay({
                     </div>
                 </div>
 
-                <div className={`absolute bottom-${currentStep < totalSteps ? "6" : "4"} left-1/2 -translate-x-1/2 ${currentStep < totalSteps ? "w-18" : ""} z-10`}>
+                <div className={`absolute ${currentStep < totalSteps ? "bottom-6 w-18" : "bottom-4"} left-1/2 -translate-x-1/2 z-10`}>
                     {currentStep < totalSteps ? <ProgressBar current={currentStep} total={totalSteps} />
                         : <Button onClick={() => {}} text={`Mastered ${currentStep}/${totalSteps}`} className="px-2.5 py-1.5 bg-teal400 text-preset6 font-poppins hover:translate-y-0 hover:shadow-none cursor-default" iconPosition={"start"} icon={<MasteredIcon />} />}
                 </div>
