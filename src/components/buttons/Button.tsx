@@ -27,14 +27,13 @@ export function Button({
                        }: ButtonProps): JSX.Element {
 
     const baseStyles =
-        "inline-flex items-center justify-center gap-2 transition-all duration-200 font-poppins";
+        "inline-flex items-center justify-center gap-2 transition-all duration-200 font-poppins min-w-fit";
 
     const paddedStyles =
-        "px-6 py-2 rounded-full text-preset4-semibold border-1 border-neutral900";
-
+        "px-3 md:px-6 py-2 rounded-full text-preset4-semibold border-1 border-neutral900";
 
     const variants = {
-        primary: `bg-neutral0 text-neutral900 shadow-sm  ${paddedStyles}`,
+        primary: `bg-neutral0 text-neutral900 shadow-sm ${paddedStyles}`,
         secondary: `bg-white text-neutral900 hover:bg-neutral100 ${paddedStyles}`,
         icon: "bg-transparent shadow-none border-none px-0 py-0",
         menu: "cursor-pointer w-full justify-start px-4 py-3 hover:bg-neutral100 text-preset5 text-neutral700 transition-colors",
@@ -44,13 +43,13 @@ export function Button({
         <button
             type={type}
             onClick={onClick}
-            className={cn(baseStyles, variants[variant], className)}
+            className={cn(baseStyles, "h-10 md:h-auto", variants[variant], className)}
         >
-            {icon && iconPosition === "start" && <span>{icon}</span>}
+            {icon && iconPosition === "start" && icon}
 
-            {text && <span>{text}</span>}
+            {text}
 
-            {icon && iconPosition === "end" && <span>{icon}</span>}
+            {icon && iconPosition === "end" && icon}
         </button>
     );
 }

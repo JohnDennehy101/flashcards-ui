@@ -6,6 +6,7 @@ import PatternStarBlueIcon from "../../assets/images/pattern-star-blue.svg?react
 import PatternStarYellowIcon from "../../assets/images/pattern-star-yellow.svg?react";
 import TickIcon from "../../assets/images/icon-circle-check.svg?react"
 import ResetProgressIcon from "../../assets/images/icon-reset.svg?react";
+import MasteredIcon from "../../assets/images/icon-mastered.svg?react"
 
 interface FlashcardDisplayProps {
     type: 'qa' | 'mcq' | 'yes_no';
@@ -119,8 +120,9 @@ export function FlashcardDisplay({
                     </div>
                 </div>
 
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-18 z-10">
-                    <ProgressBar current={currentStep} total={totalSteps} />
+                <div className={`absolute ${currentStep < totalSteps ? "bottom-6 w-18" : "bottom-4"} left-1/2 -translate-x-1/2 z-10`}>
+                    {currentStep < totalSteps ? <ProgressBar current={currentStep} total={totalSteps} />
+                        : <Button onClick={() => {}} text={`Mastered ${currentStep}/${totalSteps}`} className="px-2.5 py-1.5 bg-teal400 text-preset6 font-poppins hover:translate-y-0 hover:shadow-none cursor-default" iconPosition={"start"} icon={<MasteredIcon />} />}
                 </div>
 
                 <div className={`absolute bottom-10 transition-all duration-300 ease-in-out ${showAnswer ? "left-6" : "left-10"}`}>

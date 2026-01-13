@@ -6,30 +6,48 @@ import CrossIcon from "../assets/images/icon-cross.svg?react"
 import ShuffleIcon from "../assets/images/icon-shuffle.svg?react"
 import ChevronDownIcon from "../assets/images/icon-chevron-down.svg?react"
 import {Card} from "../components/cards/Card.tsx";
-import {useFlashcards} from "../context/FlashcardContext.tsx";
+import {Category, useFlashcards} from "../context/FlashcardContext.tsx";
 import {CategoryDropdown} from "../components/dropdowns/CategoryDropdown.tsx";
 
 export function List(): JSX.Element {
     const [showAddCard, setShowAddCard] = useState(false);
     const [showCategories, setShowCategories] = useState(false);
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const { flashcards, isLoading, categories } = useFlashcards();
+    const {
+        flashcards,
+        isLoading,
+        categories,
+        selectedCategories,
+        setSelectedCategories,
+        hideMastered,
+        setHideMastered
+    } = useFlashcards();
 
-    const toggleCategory = (category: string) => {
-        setSelectedCategories(prev =>
-            prev.includes(category)
-                ? prev.filter(c => c !== category)
-                : [...prev, category]
-        );
+    const toggleCategory = (categoryName: string) => {
+        setSelectedCategories((prev: Category[]) => {
+            const isAlreadySelected = prev.some((c: Category) => c.name === categoryName);
+
+            if (isAlreadySelected) {
+                return prev.filter((c: Category) => c.name !== categoryName);
+            } else {
+                const categoryObject = categories.find((c: Category) => c.name === categoryName);
+
+                return categoryObject ? [...prev, categoryObject] : prev;
+            }
+        });
     };
 
     const filteredFlashcards = useMemo(() => {
-        if (selectedCategories.length === 0) return flashcards;
+        return flashcards.filter(card => {
+            const matchesCategory = selectedCategories.length === 0 ||
+                card.categories?.some((cardCat: string) =>
+                    selectedCategories.some((sel: any) => sel.name === cardCat)
+                );
 
-        return flashcards.filter(card =>
-            card.categories?.some((cat: string) => selectedCategories.includes(cat))
-        );
-    }, [flashcards, selectedCategories]);
+            const matchesMastery = !hideMastered || card.status !== "mastered";
+
+            return matchesCategory && matchesMastery;
+        });
+    }, [flashcards, selectedCategories, hideMastered]);
 
     const getAnswerPreview = (card: any): string => {
         const content = card.flashcard_content;
@@ -48,7 +66,9 @@ export function List(): JSX.Element {
                     <div className="relative p-2.5 py-4 flex items-center">
                         <Button
                             onClick={() => setShowCategories(!showCategories)}
-                            text={selectedCategories.length > 0 ? `${selectedCategories.length} Selected` : "All Categories"}
+                            text={
+                                <span className="hidden md:inline">
+                                    {selectedCategories.length > 0 ? `${selectedCategories.length} Selected` : "All Categories"} </span>}
                             icon={<ChevronDownIcon />}
                             iconPosition={"end"}
                         />
@@ -59,13 +79,29 @@ export function List(): JSX.Element {
                     </div>
                     <Button
                         onClick={() => setShowAddCard(!showAddCard)}
-                        text={showAddCard ? "Close" : "Add"}
+                        text={
+                            <span className="hidden md:inline">
+                            {showAddCard ? "Close" : "Add"}
+                        </span>
+                        }
                         icon={showAddCard ? <CrossIcon/> : <PlusIcon />}
                         iconPosition={"start"}
                         className="bg-yellow500"
                     />
+                    <label className="flex items-center gap-2 ml-4 cursor-pointer group whitespace-nowrap">
+                        <input
+                            type="checkbox"
+                            checked={hideMastered}
+                            onChange={(e) => setHideMastered(e.target.checked)}
+                            className="w-4 h-4 rounded border-neutral900 text-yellow500 focus:ring-yellow500 cursor-pointer"
+                        />
+                        <span className="text-sm font-medium text-neutral900 group-hover:text-neutral700 transition-colors">
+                            Hide Mastered
+                        </span>
+                    </label>
                 </div>
-                <Button onClick={() => {}} text={"Shuffle"} icon={<ShuffleIcon />} iconPosition={"start"} />
+
+                <Button onClick={() => {}} text={<span className="hidden md:inline">Shuffle</span>} icon={<ShuffleIcon />} iconPosition={"start"} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full items-start">
@@ -86,6 +122,7 @@ export function List(): JSX.Element {
                             answer={getAnswerPreview(card)}
                             category={card.categories?.[0] || "General"}
                             progress={card.correct_count ?? 0}
+                            target={5}
                         />
                     ))
                 )}
