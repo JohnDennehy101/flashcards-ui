@@ -16,7 +16,7 @@ export function Study(): JSX.Element {
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const {flashcards, stats, isLoading: contextLoading, refreshData, categories, selectedCategories, setSelectedCategories, hideMastered, setHideMastered} = useFlashcards();
+    const {flashcards, stats, isLoading: contextLoading, refreshData, categories, selectedCategories, setSelectedCategories, hideMastered, setHideMastered, shuffleCards} = useFlashcards();
 
     const [showAnswer, setShowAnswer] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -122,6 +122,14 @@ export function Study(): JSX.Element {
                     selectedCategory={selectedCategories.length > 0 ? `${selectedCategories.length} Selected` : "All Categories"}
                     hideMastered={hideMastered}
                     onCategoryClick={() => setShowCategories(!showCategories)}
+                    onShuffleClick={() => {
+                        shuffleCards();
+                        setShowAnswer(false);
+
+                        if (filteredFlashcards.length > 0) {
+                            navigate(`/study/${filteredFlashcards[0].id}`);
+                        }
+                    }}
                     onHideMasteredChange={(checked: boolean) => setHideMastered(checked)}
                 >
                     {showCategories && (
