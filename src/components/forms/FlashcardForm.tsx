@@ -6,15 +6,23 @@ import PlusIcon from "../../assets/images/icon-circle-plus.svg?react"
 import DeleteIcon from "../../assets/images/icon-delete.svg?react"
 import ErrorIcon from "../../assets/images/icon-error.svg?react"
 import {Button} from "../../components/buttons/Button.tsx";
+import {apiService} from "../../services/api.ts";
+import {JSX, useEffect} from "react";
 
 
-export function FlashcardForm() {
+interface FlashcardFormProps {
+    refresh: (force?: boolean | undefined) => Promise<void>;
+}
+
+export function FlashcardForm({refresh}: FlashcardFormProps): JSX.Element {
     const {
         register,
         handleSubmit,
         watch,
         control,
-        formState: { errors }
+        formState: { errors },
+        reset,
+        resetField
     } = useForm<FlashcardFormValues>({
         resolver: zodResolver(flashcardSchema),
         defaultValues: {
@@ -33,19 +41,28 @@ export function FlashcardForm() {
 
     const selectedType = watch("flashcard_type");
 
+    useEffect(() => {
+        const defaults: Record<string, any> = {
+            qa: { answer: "", justification: "" },
+            mcq: { options: ["", ""], correct_index: 0, justification: "" },
+            yes_no: { correct: true, justification: "" }
+        };
+
+        resetField("flashcard_content", {
+            defaultValue: defaults[selectedType]
+        });
+    }, [selectedType, resetField]);
+
     const onSubmit = async (data: FlashcardFormValues) => {
         try {
-            const response = await fetch("/v1/flashcards", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
-            });
+            const response = await apiService.createFlashcard(data)
 
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error("Server error:", errorData);
             } else {
-                console.log("Success!");
+                await refresh(true);
+                reset();
             }
         } catch (err) {
             console.error("Network error:", err);

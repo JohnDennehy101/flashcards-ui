@@ -147,7 +147,7 @@ export function Study(): JSX.Element {
                 <FlashcardDisplay
                     currentStep={card.correct_count ?? 0}
                     totalSteps={5}
-                    category={card.categories?.[0] ?? "General"}
+                    category={card.categories?.[0] ?? ""}
                     type={card.flashcard_type}
                     content={card.flashcard_content}
                     question={card.question}

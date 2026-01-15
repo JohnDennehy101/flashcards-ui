@@ -1,4 +1,5 @@
 import { LoginFormValues } from "../schemas/login.ts"
+import { FlashcardFormValues } from "@/schemas/flashcard.ts"
 
 const BASE_URL = "http://localhost:4000/v1"
 
@@ -83,5 +84,14 @@ export const apiService = {
   async getCategories() {
     const response = await apiRequest(`/categories`)
     return await response.json()
+  },
+
+  async createFlashcard(flashcard: FlashcardFormValues) {
+    const data = await apiRequest("/flashcards", {
+      method: "POST",
+      body: JSON.stringify(flashcard),
+    })
+
+    return data
   },
 }

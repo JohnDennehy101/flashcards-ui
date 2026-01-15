@@ -20,7 +20,8 @@ export function List(): JSX.Element {
         setSelectedCategories,
         hideMastered,
         setHideMastered,
-        shuffleCards
+        shuffleCards,
+        refreshData
     } = useFlashcards();
 
     const toggleCategory = (categoryName: string) => {
@@ -108,7 +109,7 @@ export function List(): JSX.Element {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full items-start">
                 {showAddCard && (
                     <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                        <FlashcardForm />
+                        <FlashcardForm refresh={refreshData} />
                     </div>
                 )}
 
@@ -121,7 +122,7 @@ export function List(): JSX.Element {
                             id={card.id.toString()}
                             question={card.question}
                             answer={getAnswerPreview(card)}
-                            category={card.categories?.[0] || "General"}
+                            category={card.categories?.[0] || ""}
                             progress={card.correct_count ?? 0}
                             target={5}
                         />
