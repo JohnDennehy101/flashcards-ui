@@ -26,7 +26,7 @@ export const MCQFields = ({ control, register, errors }: MCQFieldsProps) => {
                 <div key={field.id} className="flex items-center gap-2 pb-4">
                     <input
                         type="radio"
-                        value={index}
+                        value={`${index}`}
                         {...register("flashcard_content.correct_index" as any, { valueAsNumber: true })}
                         className="w-4 h-4"
                     />
@@ -42,6 +42,10 @@ export const MCQFields = ({ control, register, errors }: MCQFieldsProps) => {
 
             {contentErrors?.options && (
                 <p className="text-red-600 text-sm">{contentErrors.options.message}</p>
+            )}
+
+            {contentErrors?.correct_index && (
+                <p className="text-red-600 text-sm">{"Please select the correct option"}</p>
             )}
 
             <Button text={"Add Option"} onClick={() => append("")} className="bg-neutral100" icon={<PlusIcon />} iconPosition={"start"} />
