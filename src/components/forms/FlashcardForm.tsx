@@ -3,18 +3,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FlashcardFormValues, flashcardSchema } from "../../schemas/flashcard.ts";
 import { MCQFields } from "../../components/forms/MCQFields.tsx";
 import PlusIcon from "../../assets/images/icon-circle-plus.svg?react"
+import EditIcon from "../../assets/images/icon-edit.svg?react"
 import DeleteIcon from "../../assets/images/icon-delete.svg?react"
 import ErrorIcon from "../../assets/images/icon-error.svg?react"
 import {Button} from "../../components/buttons/Button.tsx";
 import {apiService} from "../../services/api.ts";
 import {JSX, useEffect} from "react";
-
+import {useSnackbar} from "../../context/SnackbarContext.tsx";
 
 interface FlashcardFormProps {
     refresh: (force?: boolean | undefined) => Promise<void>;
+    initialData?: any;
+    onSuccess?: () => void;
 }
 
-export function FlashcardForm({refresh}: FlashcardFormProps): JSX.Element {
+export function FlashcardForm({refresh, initialData, onSuccess}: FlashcardFormProps): JSX.Element {
+    const isEditing = !!initialData;
+
+    const { showSnackbar } = useSnackbar();
+
     const {
         register,
         handleSubmit,
@@ -22,7 +29,8 @@ export function FlashcardForm({refresh}: FlashcardFormProps): JSX.Element {
         control,
         formState: { errors },
         reset,
-        resetField
+        resetField,
+        setValue
     } = useForm<FlashcardFormValues>({
         resolver: zodResolver(flashcardSchema),
         defaultValues: {
@@ -42,27 +50,39 @@ export function FlashcardForm({refresh}: FlashcardFormProps): JSX.Element {
     const selectedType = watch("flashcard_type");
 
     useEffect(() => {
-        const defaults: Record<string, any> = {
-            qa: { answer: "", justification: "" },
-            mcq: { options: ["", ""], correct_index: 0, justification: "" },
-            yes_no: { correct: true, justification: "" }
-        };
+        if (initialData) {
+            reset({
+                ...initialData,
+                categories: initialData.categories || []
+            });
+        }
+    }, [initialData, reset]);
 
-        resetField("flashcard_content", {
-            defaultValue: defaults[selectedType]
-        });
-    }, [selectedType, resetField]);
+    useEffect(() => {
+        if (!isEditing) {
+            const defaults: Record<string, any> = {
+                qa: { answer: "", justification: "" },
+                mcq: { options: ["", ""], correct_index: 0, justification: "" },
+                yes_no: { correct: true, justification: "" }
+            };
+
+            resetField("flashcard_content", {
+                defaultValue: defaults[selectedType]
+            });
+        }
+    }, [selectedType, resetField, isEditing]);
 
     const onSubmit = async (data: FlashcardFormValues) => {
         try {
-            const response = await apiService.createFlashcard(data)
+            const response = isEditing
+                ? await apiService.updateFlashcard(initialData.id, data)
+                : await apiService.createFlashcard(data);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Server error:", errorData);
-            } else {
+            if (response.ok) {
                 await refresh(true);
-                reset();
+                showSnackbar(isEditing ? "Card updated successfully." : "Card created successfully.");
+                if (!isEditing) reset();
+                onSuccess?.();
             }
         } catch (err) {
             console.error("Network error:", err);
@@ -70,102 +90,107 @@ export function FlashcardForm({refresh}: FlashcardFormProps): JSX.Element {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full border bg-neutral0 border-neutral-900 rounded-12">
+        <form onSubmit={handleSubmit(onSubmit)} className={`${!isEditing ? 'space-y-4' : ''} w-full bg-neutral0 rounded-12 ${!isEditing ? 'border border-neutral-900' : ''}`}>
+            <div className={`flex flex-col gap-4 w-full h-auto ${!isEditing ? 'p-4' : ''}`}>
 
-            <div className="p-4 w-full h-auto">
-                <div className="pb-4">
-                    <select {...register("flashcard_type")} className="border border-neutral-900 placeholder-neutral-600 p-3 rounded-6">
+                <div className="pb-2">
+                    <select {...register("flashcard_type")} className="border border-neutral-900 p-3 rounded-6">
                         <option value="qa">Q&A</option>
                         <option value="mcq">Multiple Choice</option>
                         <option value="yes_no">True/False</option>
                     </select>
                 </div>
 
-                <div className="pb-4">
-                <label>Question</label>
-                <input {...register("question")} placeholder="e.g., What is the name of the order related to intellectual property claims?" className="border border-neutral-900 placeholder-neutral-600 p-4 mt-2 w-full rounded-6" />
-                {errors.question && <div className="flex flex-row items-center gap-1.5">
-                    <Button text={""} variant={"icon"} onClick={() => {}} icon={<ErrorIcon />} iconPosition={"start"} className="pt-2" /><p className="text-pink700 text-preset5 pt-2">{errors.question.message}</p></div>}
-            </div>
-
+                <div>
+                    <label className="font-bold">Question</label>
+                    <input {...register("question")} className="border border-neutral-900 p-4 mt-2 w-full rounded-6" />
+                    {errors.question && (
+                        <div className="flex items-center gap-1.5 mt-2">
+                            <ErrorIcon className="text-pink700" />
+                            <p className="text-pink700 text-sm">{errors.question.message}</p>
+                        </div>
+                    )}
+                </div>
 
                 {selectedType === "qa" && (
-                    <fieldset className="pb-4">
-                        <legend>Answer</legend>
-                        <input
-                            {...register("flashcard_content.answer" as const)}
-                            placeholder="e.g., Order 5D"
-                            className="border border-neutral-900 placeholder-neutral-600 p-4 mt-2 w-full rounded-6"
-                        />
-                        {errors.flashcard_content && 'answer' in errors.flashcard_content && (
-                            <div className="flex flex-row items-center gap-1.5">
-                                <Button text={""} variant={"icon"} onClick={() => {}} icon={<ErrorIcon />} iconPosition={"start"} className="pt-2" />
-                            <p className="text-pink700 text-preset5 pt-2">{(errors.flashcard_content as any).answer?.message}</p>
-                            </div>
-                                )}
+                    <fieldset>
+                        <legend className="font-bold">Answer</legend>
+                        <input {...register("flashcard_content.answer" as const)} className="border border-neutral-900 p-4 mt-2 w-full rounded-6" />
                     </fieldset>
                 )}
 
                 {selectedType === "yes_no" && (
-                    <fieldset className="pb-4">
-                        <label className="flex items-center gap-2">
-                            <span>Is this statement true?</span>
-                            <input type="checkbox" {...register("flashcard_content.correct" as const)} />
-                        </label>
+                    <fieldset className="flex items-center gap-4 border border-neutral-100 p-4 rounded-6">
+                        <span className="font-bold">Correct Statement?</span>
+                        <input type="checkbox" {...register("flashcard_content.correct" as const)} className="w-6 h-6 accent-yellow500" />
                     </fieldset>
                 )}
 
                 {selectedType === "mcq" && (
-                    <div className="pb-4">
-                    <MCQFields register={register} control={control} errors={errors} />
-                    </div>
+                    <MCQFields register={register} control={control} errors={errors} setValue={setValue} />
                 )}
 
-            <div className="pb-4">
-                <label className="block font-medium">Source Text</label>
-                <textarea {...register("text")} placeholder="e.g. Order 5D: Intellectual Property Claims[1] - Definitions 1. In this Order, unless the context or subject matter..." className="border border-neutral-900 placeholder-neutral-600 p-4 mt-2 w-full rounded-6" />
-                {errors.text &&
-                    <div className="flex flex-row items-center gap-1.5">
-                        <Button text={""} variant={"icon"} onClick={() => {}} icon={<ErrorIcon />} iconPosition={"start"} className="pt-2" />
-                        <p className="text-pink700 text-preset5 pt-2">{errors.text.message}</p> </div>}
-            </div>
-
-                <div className="pb-4">
-                    <label className="block font-medium">Justification</label>
-                    <textarea
-                        {...register("flashcard_content.justification" as any)}
-                        placeholder="E.g., Order 5D: Intellectual Property Claims"
-                        className="border border-neutral-900 p-4 placeholder-neutral-600 placeholder-opacity-100 mt-2 w-full h-20 rounded-6"
-                    />
-                    <p className="text-xs text-gray-500">Provide context or a mnemonic to help with learning.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="font-bold">Source Text</label>
+                        <textarea {...register("text")} className="border border-neutral-900 p-4 mt-2 w-full rounded-6 h-32" />
+                    </div>
+                    <div>
+                        <label className="font-bold">Justification</label>
+                        <textarea {...register("flashcard_content.justification" as any)} className="border border-neutral-900 p-4 mt-2 w-full rounded-6 h-32" />
+                    </div>
                 </div>
 
-                <div className="pb-4">
-                    <label className="block mb-2">Categories</label>
-                    <div className="flex flex-wrap gap-2 mb-2">
+                <div className="bg-neutral-50 p-4 rounded-8 border border-neutral-100">
+                    <label className="block mb-2 font-bold">Categories</label>
+                    <div className="flex flex-col gap-3 mb-3">
                         {fields.map((field, index) => (
-                            <div key={field.id} className="flex items-center gap-1 px-2 py-1 rounded">
-                                <div className="flex items-center gap-2 pb-2">
+                            <div key={field.id} className="flex items-center gap-2">
                                 <input
                                     {...register(`categories.${index}` as const)}
-                                    className="bg-neutral100 text-sm border p-3 placeholder-neutral-600 border-neutral-900 rounded-8"
-                                    placeholder="Category name"
+                                    className="flex-1 border border-neutral-900 p-3 rounded-8"
                                 />
-                                <Button text={""} variant={"icon"} onClick={() => remove(index)} icon={<DeleteIcon />} iconPosition={"start"} className="px-1" />
-                                </div>
+                                <Button
+                                    type="button"
+                                    variant="icon"
+                                    onClick={() => remove(index)}
+                                    icon={<DeleteIcon />}
+                                />
                             </div>
                         ))}
                     </div>
-                    <Button text={"Category"} onClick={() => append("")} className="bg-neutral100" icon={<PlusIcon />} iconPosition={"start"} />
-                    {errors.categories && <div className="flex flex-row items-center gap-1.5">
-                        <Button text={""} variant={"icon"} onClick={() => {}} icon={<ErrorIcon />} iconPosition={"start"} className="pt-2" /><p className="text-pink700 text-preset5 pt-2">{errors.categories.message}</p></div>}
+                    <Button
+                        type="button"
+                        text="Add Category"
+                        onClick={() => append("")}
+                        icon={<PlusIcon />}
+                        className="bg-neutral100"
+                    />
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-neutral-50 rounded-8 border border-neutral-100">
+                    <div>
+                        <label className="text-xs font-bold uppercase text-neutral500">Section</label>
+                        <input {...register("section")} className="border border-neutral900 p-2 w-full rounded-6 mt-1" />
+                    </div>
+                    <div>
+                        <label className="text-xs font-bold uppercase text-neutral500">Section Type</label>
+                        <input {...register("section_type")} className="border border-neutral-900 p-2 w-full rounded-6 mt-1" />
+                    </div>
+                    <div>
+                        <label className="text-xs font-bold uppercase text-neutral500">Source File</label>
+                        <input {...register("source_file")} className="border border-neutral-900 p-2 w-full rounded-6 mt-1" />
+                    </div>
+                </div>
 
-
-
-                <div className="pb-4">
-                    <Button type={"submit"} text={"Create Card"} onClick={() => {}} icon={<PlusIcon />} iconPosition={"start"} className="bg-yellow500"  />
+                <div className="pt-4">
+                    <Button
+                        type="submit"
+                        text={isEditing ? "Update Card" : "Create Card"}
+                        icon={isEditing ? <EditIcon /> : <PlusIcon />}
+                        iconPosition="start"
+                        className="bg-yellow500 w-full md:w-auto py-4 px-8 text-lg"
+                    />
                 </div>
             </div>
         </form>

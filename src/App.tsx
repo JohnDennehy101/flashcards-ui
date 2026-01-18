@@ -4,6 +4,7 @@ import { routes } from "./routes"
 import { DesktopHeader } from "./components/header/DesktopHeader.tsx";
 import { MobileHeader } from "./components/header/MobileHeader.tsx";
 import { FlashcardProvider } from "./context/FlashcardContext";
+import {SnackbarProvider} from "./context/SnackbarContext.tsx";
 
 export default function App(): JSX.Element {
     const isAuthenticated = !!localStorage.getItem("auth_token");
@@ -12,6 +13,7 @@ export default function App(): JSX.Element {
         <BrowserRouter>
             <div className="min-h-screen bg-neutral100 flex flex-col">
                 {isAuthenticated ? (
+                    <SnackbarProvider>
                     <FlashcardProvider>
                         <Routes>
                             {routes.map((route) => (
@@ -23,6 +25,7 @@ export default function App(): JSX.Element {
                             ))}
                         </Routes>
                     </FlashcardProvider>
+                    </SnackbarProvider>
                 ) : (
                     <Routes>
                         {routes.map((route) => (

@@ -12,15 +12,19 @@ interface CardProps {
     category: string;
     progress: number;
     target: number;
+    isMenuOpen: boolean;
+    onMenuToggle: (isOpen: boolean) => void;
+    onEdit: () => void;
+    onDelete: () => void;
 }
 
-export function Card({ id, question, answer, category, progress, target }: CardProps) : JSX.Element {
+export function Card({ id, question, answer, category, progress, target, isMenuOpen, onMenuToggle, onEdit, onDelete }: CardProps) : JSX.Element {
     const navigate = useNavigate();
 
     const handleCardClick = () => {
         navigate(`/study/${id}`);
     };
-    return <div className="flex border rounded-8 bg-neutral0 flex-col justify-between w-full h-full cursor-pointer hover:border-neutral900" onClick={handleCardClick}>
+    return <div className="flex border rounded-8 bg-neutral0 flex-col justify-between w-full h-full cursor-pointer hover:border-neutral900" onClick={handleCardClick} data-menu-container="true">
         <div className="overflow-hidden">
             <h2 className="text-preset3 p-4">{question}</h2>
         </div>
@@ -57,7 +61,7 @@ export function Card({ id, question, answer, category, progress, target }: CardP
                 className="flex items-center"
                 onClick={(e) => e.stopPropagation()}
             >
-                <CardMenu />
+                <CardMenu onEdit={onEdit} onDelete={onDelete} isOpen={isMenuOpen} onToggle={onMenuToggle} />
             </div>
         </div>
     </div>
