@@ -248,7 +248,7 @@ export function Study(): JSX.Element {
           />
         </div>
 
-        <div className="bg-neutral0 lg:w-1/3 w-full h-fit lg:h-full px-6 py-5 rounded-16 border-1 border-neutral900 flex flex-col gap-4">
+        <div className="bg-neutral0 lg:w-1/3 w-full h-fit lg:h-full lg:items-stretch px-6 py-5 rounded-16 border-1 border-neutral900 overflow-hidden flex-col gap-4">
           <h2 className="text-preset2 font-poppins text-neutral-900 mb-4">
             Study Statistics
           </h2>
