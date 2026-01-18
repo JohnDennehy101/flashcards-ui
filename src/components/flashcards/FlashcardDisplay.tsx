@@ -1,4 +1,4 @@
-import { JSX } from "react";
+import {JSX, useState} from "react";
 import { Button } from "../../components/buttons/Button.tsx";
 import { ProgressBar } from "../../components/progress/ProgressBar.tsx";
 import PatternStarPinkIcon from "../../assets/images/pattern-star-pink.svg?react";
@@ -7,6 +7,7 @@ import PatternStarYellowIcon from "../../assets/images/pattern-star-yellow.svg?r
 import TickIcon from "../../assets/images/icon-circle-check.svg?react"
 import ResetProgressIcon from "../../assets/images/icon-reset.svg?react";
 import MasteredIcon from "../../assets/images/icon-mastered.svg?react"
+import { Modal } from "../../components/modals/Modal.tsx";
 
 interface FlashcardDisplayProps {
     type: 'qa' | 'mcq' | 'yes_no';
@@ -34,15 +35,37 @@ export function FlashcardDisplay({
                                      onReset
                                  }: FlashcardDisplayProps): JSX.Element {
 
+    const [isJustificationOpen, setIsJustificationOpen] = useState(false);
+
     const getFormattedAnswer = () => {
         if (!content) return "";
         switch (type) {
             case 'qa': return content.answer;
-            case 'yes_no': return `${content.correct ? "YES" : "NO"} — ${content.justification || ""}`;
+            case 'yes_no': return `${content.correct ? "YES" : "NO"}`;
             case 'mcq': return content.options?.[content.correct_index] || "";
             default: return "";
         }
     };
+
+    const getHighlightedText = (text: string, highlight: string) => {
+        if (!highlight || !text) return text;
+        const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+        return (
+            <span>
+                {parts.map((part, i) =>
+                    part.toLowerCase() === highlight.toLowerCase() ? (
+                        <mark key={i} className="bg-yellow500 text-neutral900 rounded-sm px-1 font-bold">
+                            {part}
+                        </mark>
+                    ) : (
+                        part
+                    )
+                )}
+            </span>
+        );
+    };
+
+    console.log(content);
 
     const isMcq = type === 'mcq';
 
@@ -75,7 +98,7 @@ export function FlashcardDisplay({
                 <div className="relative w-full h-full flex flex-col items-center">
 
                     <div className={`absolute inset-0 flex flex-col items-center px-6 transition-all duration-200
-    ${showAnswer ? "translate-y-8 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}
+    ${showAnswer ? "translate-y-8 opacity-0 pointer-events-auto" : "translate-y-0 opacity-100 pointer-events-none"}
     ${type === 'mcq' ? "justify-start pt-18" : "justify-center"}`}
                     >
                         <div className={`w-full flex items-center justify-center ${type === 'mcq' ? 'mb-2' : ''}`}>
@@ -108,8 +131,8 @@ export function FlashcardDisplay({
                         )}
                     </div>
 
-                    <div className={`absolute inset-0 flex flex-col items-center justify-center px-10 transition-all pointer-events-none
-                        ${showAnswer ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+                    <div className={`absolute inset-0 flex flex-col items-center justify-center px-10 transition-all
+                        ${showAnswer ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"}`}
                     >
                         <p className="text-preset4 font-poppins text-neutral900 text-center">
                             {"Answer:"}
@@ -117,6 +140,18 @@ export function FlashcardDisplay({
                         <p className="text-preset2 font-poppins text-neutral900 py-4 text-center leading-tight">
                             {getFormattedAnswer()}
                         </p>
+
+                        {(content?.justification || content?.text) && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsJustificationOpen(true);
+                                }}
+                                className="mt-2 text-preset6 font-bold text-neutral900 underline decoration-2 underline-offset-4 cursor-pointer"
+                            >
+                                View Justification
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -134,6 +169,35 @@ export function FlashcardDisplay({
                 <Button text={"I Know This"} onClick={onReview} iconPosition={"start"} icon={<TickIcon />} className="bg-yellow500 cursor-pointer" />
                 <Button text={"Reset Progress"} onClick={onReset} iconPosition={"start"} icon={<ResetProgressIcon />} className="cursor-pointer" />
             </div>
+
+            <Modal
+                isOpen={isJustificationOpen}
+                onClose={() => setIsJustificationOpen(false)}
+                title="Source & Justification"
+                size="2xl"
+            >
+                <div className="space-y-6 py-2">
+                    <div className="space-y-2">
+                        <h4 className="text-preset5 font-bold text-neutral900">Justification</h4>
+                        <p className="p-4 bg-blue50 border border-neutral900 rounded-12 italic text-neutral900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                            {content.justification}
+                        </p>
+                    </div>
+
+                    {content.text && (
+                        <div className="space-y-2">
+                            <h4 className="text-preset5 font-bold text-neutral900">Source Context</h4>
+                            <div className="p-4 border border-neutral900 rounded-12 bg-neutral0 leading-relaxed text-neutral900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] max-h-[300px] overflow-y-auto">
+                                {getHighlightedText(content.text, content.justification)}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end pt-2">
+                        <Button text="Got it" onClick={() => setIsJustificationOpen(false)} className="bg-yellow500" />
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
