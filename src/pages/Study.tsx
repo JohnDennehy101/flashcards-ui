@@ -149,7 +149,7 @@ export function Study(): JSX.Element {
                     totalSteps={5}
                     category={card.categories?.[0] ?? ""}
                     type={card.flashcard_type}
-                    content={card.flashcard_content}
+                    content={{...card.flashcard_content, text: card.text}}
                     question={card.question}
                     showAnswer={showAnswer}
                     onToggle={() => setShowAnswer(!showAnswer)}

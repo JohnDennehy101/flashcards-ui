@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, ReactNode, JSX } from 'react';
+import {createContext, useContext, useState, ReactNode, JSX, useEffect} from 'react';
 import CrossIcon from "../assets/images/icon-cross.svg?react";
+import {useLocation} from "react-router-dom";
 
 interface SnackbarMessage {
     id: number;
@@ -14,6 +15,11 @@ const SnackbarContext = createContext<SnackbarContextType | undefined>(undefined
 
 export function SnackbarProvider({ children }: { children: ReactNode }): JSX.Element {
     const [messages, setMessages] = useState<SnackbarMessage[]>([]);
+    const location = useLocation();
+
+    useEffect(() => {
+        setMessages([]);
+    }, [location.pathname]);
 
     const showSnackbar = (text: string) => {
         const id = Date.now();
