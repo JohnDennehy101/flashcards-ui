@@ -19,6 +19,7 @@ export function Study(): JSX.Element {
 
   const {
     flashcards,
+    metadata,
     stats,
     isLoading: contextLoading,
     refreshData,
@@ -36,28 +37,22 @@ export function Study(): JSX.Element {
   const [isLocalLoading, setIsLocalLoading] = useState(false)
   const [showCategories, setShowCategories] = useState(false)
 
-  const filteredFlashcards = useMemo(() => {
-    return flashcards.filter(card => {
-      const matchesCategory =
-        selectedCategories.length === 0 ||
-        card.categories?.some((cardCatName: string) =>
-          selectedCategories.some(
-            (selected: Category) => selected.name === cardCatName,
-          ),
-        )
-      const matchesMastery = !hideMastered || card.status !== "mastered"
-      return matchesCategory && matchesMastery
-    })
-  }, [flashcards, selectedCategories, hideMastered])
+  useEffect(() => {
+    refreshData(true, 1, 1000)
+      
+    return () => {
+      refreshData(false, 1, 12)
+    }
+  }, [])
 
   const card = useMemo(() => {
-    const contextCard = filteredFlashcards.find(f => f.id === Number(id))
+    const contextCard = flashcards.find(f => f.id === Number(id))
     if (contextCard) return contextCard
 
     if (flashcards.length === 0) return fetchedCard
 
     return null
-  }, [filteredFlashcards, id, fetchedCard, flashcards.length])
+  }, [flashcards, id, fetchedCard, flashcards.length])
 
   useEffect(() => {
     setShowAnswer(false)
@@ -66,25 +61,39 @@ export function Study(): JSX.Element {
   }, [id])
 
   useEffect(() => {
-    if (id && !contextLoading && filteredFlashcards.length > 0) {
-      const isCurrentCardInFilteredList = filteredFlashcards.some(
+    if (id && !contextLoading && flashcards.length > 0) {
+      const isCurrentCardInFilteredList = flashcards.some(
         f => f.id === Number(id),
       )
 
       if (!isCurrentCardInFilteredList) {
-        navigate(`/study/${filteredFlashcards[0].id}`, { replace: true })
+        navigate(`/study/${flashcards[0].id}`, { replace: true })
       }
     }
-  }, [id, filteredFlashcards, contextLoading, navigate])
+  }, [id, flashcards, contextLoading, navigate])
 
   useEffect(() => {
-    if (!contextLoading && !id && filteredFlashcards.length > 0) {
-      navigate(`/study/${filteredFlashcards[0].id}`, { replace: true })
+    if (!contextLoading && flashcards.length > 0) {
+      const isCurrentCardInFilteredList = flashcards.some(
+        f => f.id === Number(id),
+      )
+
+      if (!isCurrentCardInFilteredList) {
+        navigate(`/study/${flashcards[0].id}`, { replace: true })
+      }
     }
-  }, [id, filteredFlashcards, contextLoading, navigate])
+  }, [id, flashcards, contextLoading, navigate])
 
   useEffect(() => {
-    if (!contextLoading && !card && id && flashcards.length === 0) {
+    const noMatchesPossible = metadata && metadata.total_records === 0
+
+    if (
+      !contextLoading &&
+      !card &&
+      id &&
+      flashcards.length === 0 &&
+      !noMatchesPossible
+    ) {
       const fetchIndividualCard = async () => {
         setIsLocalLoading(true)
         try {
@@ -93,7 +102,7 @@ export function Study(): JSX.Element {
             const data = await response.json()
             setFetchedCard(data)
           } else {
-            setError("Card not found.")
+            console.warn("Card not found in current filter context")
           }
         } catch (err) {
           setError("Failed to load the card.")
@@ -103,28 +112,26 @@ export function Study(): JSX.Element {
       }
       fetchIndividualCard()
     }
-  }, [id, card, contextLoading, flashcards.length])
+  }, [id, card, contextLoading, flashcards.length, metadata])
 
   const handleNavigation = (direction: "next" | "prev") => {
-    if (!filteredFlashcards.length) return
+    if (!flashcards.length) return
 
-    const currentIndex = filteredFlashcards.findIndex(f => f.id === Number(id))
+    const currentIndex = flashcards.findIndex(f => f.id === Number(id))
 
     if (currentIndex === -1) {
-      navigate(`/study/${filteredFlashcards[0].id}`)
+      navigate(`/study/${flashcards[0].id}`)
       return
     }
 
     let nextIndex
     if (direction === "next") {
-      nextIndex = (currentIndex + 1) % filteredFlashcards.length
+      nextIndex = (currentIndex + 1) % flashcards.length
     } else {
-      nextIndex =
-        (currentIndex - 1 + filteredFlashcards.length) %
-        filteredFlashcards.length
+      nextIndex = (currentIndex - 1 + flashcards.length) % flashcards.length
     }
 
-    navigate(`/study/${filteredFlashcards[nextIndex].id}`)
+    navigate(`/study/${flashcards[nextIndex].id}`)
   }
 
   const toggleCategory = (categoryName: string) => {
@@ -161,37 +168,41 @@ export function Study(): JSX.Element {
     }
   }
 
-  if (error)
-    return <div className="p-10 text-red-500 font-poppins">Error: {error}</div>
-
   if (contextLoading && flashcards.length === 0)
     return <div className="p-10 font-poppins">Loading session...</div>
 
-  if (!contextLoading && filteredFlashcards.length === 0) {
+  if (!contextLoading && flashcards.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[631px] w-full border-1 border-neutral900 rounded-20 bg-neutral0">
-        <p className="text-preset3 text-neutral600">
-          No cards match your filters.
-        </p>
-        <Button
-          text="Reset Filters"
-          onClick={() => {
-            setHideMastered(false)
-            setSelectedCategories([])
-          }}
-          className="mt-4 bg-yellow500"
-        />
+      <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[631px] w-full lg:px-24 md:px-8 px-4 py-4">
+        <div className="flex flex-col items-center justify-center h-full w-full border-1 border-neutral900 rounded-20 bg-neutral0 shadow-sm">
+          <p className="text-preset3 text-neutral600 text-center px-6">
+            No cards match your filters in this category.
+          </p>
+          <Button
+            text="Reset Filters"
+            onClick={() => {
+              setHideMastered(false)
+              setSelectedCategories([])
+            }}
+            className="mt-4 bg-yellow500 hover:bg-yellow-600 transition-colors"
+          />
+        </div>
       </div>
     )
   }
+
+  if (error)
+    return <div className="p-10 text-red-500 font-poppins">Error: {error}</div>
 
   if (isLocalLoading)
     return <div className="p-10 font-poppins">Finding card...</div>
 
   if (card) {
-    const currentIndex = filteredFlashcards.findIndex(f => f.id === Number(id))
+    const currentIndex = flashcards.findIndex(f => f.id === Number(id))
+
     const currentPos = currentIndex !== -1 ? currentIndex + 1 : 1
-    const totalCardsCount = filteredFlashcards.length
+
+    const totalCardsCount = metadata?.total_records ?? 0
 
     return (
       <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[631px] w-full lg:px-24 md:px-8 px-4 py-4">
@@ -206,8 +217,8 @@ export function Study(): JSX.Element {
             onCategoryClick={() => setShowCategories(!showCategories)}
             onShuffleClick={() => {
               shuffleCards()
-              if (filteredFlashcards.length > 0) {
-                navigate(`/study/${filteredFlashcards[0].id}`)
+              if (flashcards.length > 0) {
+                navigate(`/study/${flashcards[0].id}`)
               }
             }}
             onHideMasteredChange={(checked: boolean) =>

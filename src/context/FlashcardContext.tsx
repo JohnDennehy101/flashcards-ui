@@ -10,6 +10,14 @@ import React, {
 } from "react"
 import { apiService } from "../services/api"
 
+export interface Metadata {
+  current_page: number
+  page_size: number
+  first_page: number
+  last_page: number
+  total_records: number
+}
+
 interface FlashcardStats {
   total: number
   mastered: number
@@ -23,12 +31,17 @@ export interface Category {
 }
 
 interface FlashcardContextType {
+  metadata: Metadata | null
   flashcards: any[]
   categories: Category[]
   stats: FlashcardStats | null
   isLoading: boolean
   error: string | null
-  refreshData: (force?: boolean) => Promise<void>
+  refreshData: (
+    force?: boolean,
+    page?: number,
+    pageSize?: number,
+  ) => Promise<void>
   selectedCategories: Category[]
   setSelectedCategories: Dispatch<SetStateAction<Category[]>>
   hideMastered: boolean
@@ -43,68 +56,87 @@ const FlashcardContext = createContext<FlashcardContextType | undefined>(
 
 export function FlashcardProvider({ children }: { children: React.ReactNode }) {
   const [flashcards, setFlashcards] = useState<any[]>([])
+  const [metadata, setMetadata] = useState<Metadata | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [stats, setStats] = useState<FlashcardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
   const [hideMastered, setHideMastered] = useState(false)
+  const [sort, setSort] = useState<string>("id")
 
+  const pageSizeRef = useRef(12)
   const isFetchingRef = useRef(false)
   const hasInitializedRef = useRef(false)
 
   const shuffleCards = () => {
-    setFlashcards(prev => {
-      const shuffled = [...prev]
-
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-      }
-
-      return shuffled
-    })
+    setSort(prev => (prev === "random" ? "id" : "random"))
   }
 
-  const loadData = useCallback(async (force = false) => {
-    if (isFetchingRef.current) return
+  const loadData = useCallback(
+    async (force = false, page = 1, customPageSize?: number) => {
+      if (isFetchingRef.current) return
 
-    if (!force && hasInitializedRef.current) {
-      setIsLoading(false)
-      return
-    }
+      if (customPageSize !== undefined) {
+        pageSizeRef.current = customPageSize
+      }
 
-    try {
-      isFetchingRef.current = true
-      setError(null)
+      if (!force && hasInitializedRef.current) {
+        setIsLoading(false)
+        return
+      }
 
-      const [cardsData, statsData, categoriesData] = await Promise.all([
-        apiService.getAll(),
-        apiService.getStats(),
-        apiService.getCategories(),
-      ])
+      try {
+        isFetchingRef.current = true
+        if (page === 1) setIsLoading(true)
+        setError(null)
 
-      setFlashcards(cardsData.flashcards)
-      setStats(statsData)
-      setCategories(categoriesData.categories)
-      hasInitializedRef.current = true
-    } catch (err) {
-      console.error(err)
-      setError("Failed to sync data.")
-    } finally {
-      isFetchingRef.current = false
-      setIsLoading(false)
-    }
-  }, [])
+        const catNames = selectedCategories.map(c => c.name).join(",")
+
+        const [cardsData, statsData, categoriesData] = await Promise.all([
+          apiService.getAll(
+            page,
+            pageSizeRef.current,
+            catNames,
+            hideMastered,
+            sort,
+          ),
+          apiService.getStats(),
+          apiService.getCategories(hideMastered),
+        ])
+
+        setFlashcards(prev => {
+          return page === 1
+            ? cardsData.flashcards
+            : [...prev, ...cardsData.flashcards]
+        })
+
+        setStats(statsData)
+        setCategories(categoriesData.categories)
+        setMetadata(cardsData.metadata)
+
+        hasInitializedRef.current = true
+      } catch (err) {
+        console.error(err)
+        setError("Failed to sync data.")
+      } finally {
+        isFetchingRef.current = false
+        setIsLoading(false)
+      }
+    },
+    [selectedCategories, hideMastered, sort],
+  )
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadData(true, 1)
+  }, [selectedCategories, hideMastered, sort, loadData])
 
   return (
     <FlashcardContext.Provider
       value={{
         flashcards,
+        setFlashcards,
+        metadata,
         categories,
         stats,
         isLoading,

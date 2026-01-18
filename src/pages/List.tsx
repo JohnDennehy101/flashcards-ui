@@ -45,6 +45,7 @@ export function List(): JSX.Element {
 
   const {
     flashcards,
+    metadata,
     isLoading,
     categories,
     selectedCategories,
@@ -92,18 +93,6 @@ export function List(): JSX.Element {
       console.error("Delete error:", err)
     }
   }
-
-  const filteredFlashcards = useMemo(() => {
-    return flashcards.filter(card => {
-      const matchesCategory =
-        selectedCategories.length === 0 ||
-        card.categories?.some((cardCat: string) =>
-          selectedCategories.some((sel: any) => sel.name === cardCat),
-        )
-      const matchesMastery = !hideMastered || card.status !== "mastered"
-      return matchesCategory && matchesMastery
-    })
-  }, [flashcards, selectedCategories, hideMastered])
 
   const getAnswerPreview = (card: any): string => {
     const content = card.flashcard_content
@@ -198,7 +187,7 @@ export function List(): JSX.Element {
         {isLoading ? (
           <p>Loading flashcards...</p>
         ) : (
-          filteredFlashcards.map((card: any) => (
+          flashcards.map((card: any) => (
             <Card
               key={card.id}
               id={card.id.toString()}
@@ -259,6 +248,17 @@ export function List(): JSX.Element {
           </div>
         </div>
       </Modal>
+
+      {metadata && metadata.current_page < metadata.last_page && (
+        <div className="flex justify-center w-full py-10">
+          <Button
+            text={isLoading ? "Loading..." : "Load More"}
+            disabled={isLoading}
+            onClick={() => refreshData(true, metadata.current_page + 1)}
+            className="bg-neutral0 border-1 border-neutral900 px-10 py-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] transition-all"
+          />
+        </div>
+      )}
     </div>
   )
 }

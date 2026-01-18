@@ -48,14 +48,25 @@ export const apiService = {
 
     return data
   },
-  async getAll(params?: { section?: string; categories?: string[] }) {
-    const query = new URLSearchParams()
-    if (params?.section) query.append("section", params.section)
-    if (params?.categories)
-      query.append("categories", params.categories.join(","))
+  getAll: async (
+    page = 1,
+    pageSize = 12,
+    categories = "",
+    hideMastered = false,
+    currentSort = "id",
+  ) => {
+    const query: Record<string, string> = {
+      page: page.toString(),
+      page_size: pageSize.toString(),
+      sort: currentSort,
+    }
 
-    const res = await apiRequest(`/flashcards?${query.toString()}`)
-    return await res.json() // returns { flashcards: [], metadata: {} }
+    if (categories) query.categories = categories
+    if (hideMastered) query.hide_mastered = "true"
+
+    const params = new URLSearchParams(query)
+    const response = await apiRequest(`/flashcards?${params.toString()}`)
+    return response.json()
   },
   async getById(id: string | number) {
     const res = await apiRequest(`/flashcards/${id}`)
@@ -81,8 +92,10 @@ export const apiService = {
     return await res.json()
   },
 
-  async getCategories() {
-    const response = await apiRequest(`/categories`)
+  async getCategories(hideMastered = false) {
+    const response = await apiRequest(
+      `/categories?hide_mastered=${hideMastered}`,
+    )
     return await response.json()
   },
 
