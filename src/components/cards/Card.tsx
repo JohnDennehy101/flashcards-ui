@@ -129,7 +129,7 @@ export function Card({
               <Button
                 onClick={() => {}}
                 text={`Mastered ${progress}/${target}`}
-                className="whitespace-nowrap px-2.5 py-1.5 bg-teal400 text-preset6 font-poppins hover:translate-y-0 hover:shadow-none cursor-default"
+                className="whitespace-nowrap !px-2 !py-1.5 bg-teal400 text-preset6 font-poppins hover:translate-y-0 hover:shadow-none cursor-default"
                 iconPosition={"start"}
                 icon={<MasteredIcon />}
               />

@@ -45,12 +45,37 @@ export function Study(): JSX.Element {
             (selected: Category) => selected.name === cardCatName,
           ),
         )
-
       const matchesMastery = !hideMastered || card.status !== "mastered"
-
       return matchesCategory && matchesMastery
     })
   }, [flashcards, selectedCategories, hideMastered])
+
+  const card = useMemo(() => {
+    const contextCard = filteredFlashcards.find(f => f.id === Number(id))
+    if (contextCard) return contextCard
+
+    if (flashcards.length === 0) return fetchedCard
+
+    return null
+  }, [filteredFlashcards, id, fetchedCard, flashcards.length])
+
+  useEffect(() => {
+    setShowAnswer(false)
+    setFetchedCard(null)
+    setError(null)
+  }, [id])
+
+  useEffect(() => {
+    if (id && !contextLoading && filteredFlashcards.length > 0) {
+      const isCurrentCardInFilteredList = filteredFlashcards.some(
+        f => f.id === Number(id),
+      )
+
+      if (!isCurrentCardInFilteredList) {
+        navigate(`/study/${filteredFlashcards[0].id}`, { replace: true })
+      }
+    }
+  }, [id, filteredFlashcards, contextLoading, navigate])
 
   useEffect(() => {
     if (!contextLoading && !id && filteredFlashcards.length > 0) {
@@ -58,13 +83,8 @@ export function Study(): JSX.Element {
     }
   }, [id, filteredFlashcards, contextLoading, navigate])
 
-  const card = useMemo(() => {
-    const contextCard = filteredFlashcards.find(f => f.id === Number(id))
-    return contextCard || fetchedCard
-  }, [filteredFlashcards, id, fetchedCard])
-
   useEffect(() => {
-    if (!contextLoading && !card && id) {
+    if (!contextLoading && !card && id && flashcards.length === 0) {
       const fetchIndividualCard = async () => {
         setIsLocalLoading(true)
         try {
@@ -83,7 +103,7 @@ export function Study(): JSX.Element {
       }
       fetchIndividualCard()
     }
-  }, [id, card, contextLoading])
+  }, [id, card, contextLoading, flashcards.length])
 
   const handleNavigation = (direction: "next" | "prev") => {
     if (!filteredFlashcards.length) return
@@ -110,7 +130,6 @@ export function Study(): JSX.Element {
   const toggleCategory = (categoryName: string) => {
     setSelectedCategories((prev: Category[]) => {
       const isAlreadySelected = prev.some(c => c.name === categoryName)
-
       if (isAlreadySelected) {
         return prev.filter(c => c.name !== categoryName)
       } else {
@@ -119,38 +138,6 @@ export function Study(): JSX.Element {
       }
     })
   }
-
-  if (error) return <div className="p-10 text-red-500">Error: {error}</div>
-  if (contextLoading) return <div className="p-10">Loading context...</div>
-  if (filteredFlashcards.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[631px] w-full border-1 border-neutral900 rounded-20 bg-neutral0">
-        <p className="text-preset3 text-neutral600">
-          No cards match your filters.
-        </p>
-      </div>
-    )
-  }
-  if (isLocalLoading || (contextLoading && !card)) {
-    return <div className="p-10">Finding card...</div>
-  }
-
-  if (!card && !isLocalLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[631px] w-full border-1 border-neutral900 rounded-20 bg-neutral0">
-        <p className="text-preset3 text-neutral600">
-          This card doesn't exist or you don't have access.
-        </p>
-        <Button
-          text="Go Back"
-          onClick={() => navigate("/list")}
-          className="mt-4 bg-yellow500"
-        />
-      </div>
-    )
-  }
-
-  const currentPos = filteredFlashcards.findIndex(f => f.id === Number(id)) + 1
 
   const handleReview = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -166,7 +153,6 @@ export function Study(): JSX.Element {
   const handleReset = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!window.confirm("Are you sure?")) return
-
     try {
       await apiService.reset(id!)
       await refreshData(true)
@@ -175,92 +161,127 @@ export function Study(): JSX.Element {
     }
   }
 
-  return (
-    <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[631px] w-full lg:px-24 md:px-8 px-4 py-4">
-      <div className="bg-neutral0 lg:w-2/3 h-fit lg:h-full flex items-center justify-center flex-col w-full border-1 border-neutral900 rounded-20 overflow-hidden">
-        <FlashcardHeader
-          selectedCategory={
-            selectedCategories.length > 0
-              ? `${selectedCategories.length} Selected`
-              : "All Categories"
-          }
-          hideMastered={hideMastered}
-          onCategoryClick={() => setShowCategories(!showCategories)}
-          onShuffleClick={() => {
-            shuffleCards()
-            setShowAnswer(false)
+  if (error)
+    return <div className="p-10 text-red-500 font-poppins">Error: {error}</div>
 
-            if (filteredFlashcards.length > 0) {
-              navigate(`/study/${filteredFlashcards[0].id}`)
-            }
+  if (contextLoading && flashcards.length === 0)
+    return <div className="p-10 font-poppins">Loading session...</div>
+
+  if (!contextLoading && filteredFlashcards.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[631px] w-full border-1 border-neutral900 rounded-20 bg-neutral0">
+        <p className="text-preset3 text-neutral600">
+          No cards match your filters.
+        </p>
+        <Button
+          text="Reset Filters"
+          onClick={() => {
+            setHideMastered(false)
+            setSelectedCategories([])
           }}
-          onHideMasteredChange={(checked: boolean) => setHideMastered(checked)}
-        >
-          {showCategories && (
-            <div className="absolute top-full left-0 z-50 mt-2">
-              <CategoryDropdown
-                categories={categories}
-                selectedCategories={selectedCategories}
-                onToggle={toggleCategory}
-                onClear={() => setSelectedCategories([])}
-              />
-            </div>
-          )}
-        </FlashcardHeader>
-
-        <FlashcardDisplay
-          currentStep={card.correct_count ?? 0}
-          totalSteps={5}
-          categories={card.categories}
-          selectedCategories={selectedCategories}
-          type={card.flashcard_type}
-          content={{ ...card.flashcard_content, text: card.text }}
-          question={card.question}
-          showAnswer={showAnswer}
-          onToggle={() => setShowAnswer(!showAnswer)}
-          onReview={handleReview}
-          onReset={handleReset}
-        />
-
-        <FlashcardFooter
-          currentCard={currentPos}
-          totalCards={filteredFlashcards.length}
-          onPrevious={() => handleNavigation("prev")}
-          onNext={() => handleNavigation("next")}
+          className="mt-4 bg-yellow500"
         />
       </div>
+    )
+  }
 
-      <div className="bg-neutral0 lg:w-1/3 w-full h-fit lg:h-full lg:items-stretch px-6 py-5 rounded-16 border-1 border-neutral900 overflow-hidden flex-col gap-4">
-        <h2 className="text-preset2 font-poppins text-neutral-900 mb-4">
-          Study Statistics
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4 flex-1 lg:flex lg:flex-col lg:justify-between">
-          <StatsItem
-            label={"Total Cards"}
-            value={stats?.total ?? 0}
-            icon={<StatsTotalIcon />}
-            iconBgColor={"bg-blue400"}
+  if (isLocalLoading)
+    return <div className="p-10 font-poppins">Finding card...</div>
+
+  if (card) {
+    const currentIndex = filteredFlashcards.findIndex(f => f.id === Number(id))
+    const currentPos = currentIndex !== -1 ? currentIndex + 1 : 1
+    const totalCardsCount = filteredFlashcards.length
+
+    return (
+      <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[631px] w-full lg:px-24 md:px-8 px-4 py-4">
+        <div className="bg-neutral0 lg:w-2/3 h-fit lg:h-full flex items-center justify-between flex-col w-full border-1 border-neutral900 rounded-20 overflow-hidden">
+          <FlashcardHeader
+            selectedCategory={
+              selectedCategories.length > 0
+                ? `${selectedCategories.length} Selected`
+                : "All Categories"
+            }
+            hideMastered={hideMastered}
+            onCategoryClick={() => setShowCategories(!showCategories)}
+            onShuffleClick={() => {
+              shuffleCards()
+              if (filteredFlashcards.length > 0) {
+                navigate(`/study/${filteredFlashcards[0].id}`)
+              }
+            }}
+            onHideMasteredChange={(checked: boolean) =>
+              setHideMastered(checked)
+            }
+          >
+            {showCategories && (
+              <div className="absolute top-full left-0 z-50 mt-2">
+                <CategoryDropdown
+                  categories={categories}
+                  selectedCategories={selectedCategories}
+                  onToggle={toggleCategory}
+                  onClear={() => setSelectedCategories([])}
+                />
+              </div>
+            )}
+          </FlashcardHeader>
+
+          <FlashcardDisplay
+            currentStep={card.correct_count ?? 0}
+            totalSteps={5}
+            categories={card.categories || []}
+            selectedCategories={selectedCategories}
+            type={card.flashcard_type}
+            content={{ ...card.flashcard_content, text: card.text }}
+            question={card.question}
+            showAnswer={showAnswer}
+            onToggle={() => setShowAnswer(!showAnswer)}
+            onReview={handleReview}
+            onReset={handleReset}
           />
-          <StatsItem
-            label={"Mastered"}
-            value={stats?.mastered ?? 0}
-            icon={<StatsMasteredIcon />}
-            iconBgColor={"bg-teal400"}
-          />
-          <StatsItem
-            label={"In Progress"}
-            value={stats?.in_progress ?? 0}
-            icon={<StatsInProgressIcon />}
-            iconBgColor={"bg-pink500"}
-          />
-          <StatsItem
-            label={"Not Started"}
-            value={stats?.not_started ?? 0}
-            icon={<StatsNotStartedIcon />}
-            iconBgColor={"bg-pink400"}
+
+          <FlashcardFooter
+            currentCard={currentPos}
+            totalCards={totalCardsCount}
+            onPrevious={() => handleNavigation("prev")}
+            onNext={() => handleNavigation("next")}
           />
         </div>
+
+        <div className="bg-neutral0 lg:w-1/3 w-full h-fit lg:h-full px-6 py-5 rounded-16 border-1 border-neutral900 flex flex-col gap-4">
+          <h2 className="text-preset2 font-poppins text-neutral-900 mb-4">
+            Study Statistics
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4 flex-1 lg:flex lg:flex-col lg:justify-between">
+            <StatsItem
+              label="Total Cards"
+              value={stats?.total ?? 0}
+              icon={<StatsTotalIcon />}
+              iconBgColor="bg-blue400"
+            />
+            <StatsItem
+              label="Mastered"
+              value={stats?.mastered ?? 0}
+              icon={<StatsMasteredIcon />}
+              iconBgColor="bg-teal400"
+            />
+            <StatsItem
+              label="In Progress"
+              value={stats?.in_progress ?? 0}
+              icon={<StatsInProgressIcon />}
+              iconBgColor="bg-pink500"
+            />
+            <StatsItem
+              label="Not Started"
+              value={stats?.not_started ?? 0}
+              icon={<StatsNotStartedIcon />}
+              iconBgColor="bg-pink400"
+            />
+          </div>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  return <div className="p-10 font-poppins">Finding card...</div>
 }

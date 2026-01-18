@@ -9,6 +9,8 @@ import ResetProgressIcon from "../../assets/images/icon-reset.svg?react"
 import MasteredIcon from "../../assets/images/icon-mastered.svg?react"
 import { Modal } from "../../components/modals/Modal.tsx"
 import { Category } from "@/context/FlashcardContext.tsx"
+import { twMerge } from "tailwind-merge"
+import { clsx, ClassValue } from "clsx"
 
 interface FlashcardDisplayProps {
   type: "qa" | "mcq" | "yes_no"
@@ -22,6 +24,10 @@ interface FlashcardDisplayProps {
   onToggle: () => void
   onReview: (e: React.MouseEvent) => Promise<void>
   onReset: (e: React.MouseEvent) => Promise<void>
+}
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }
 
 export function FlashcardDisplay({
@@ -40,7 +46,7 @@ export function FlashcardDisplay({
   const [isJustificationOpen, setIsJustificationOpen] = useState(false)
 
   const displayCategory = useMemo(() => {
-    if (!categories || categories.length === 0) return "Uncategorized"
+    if (!categories || categories.length === 0) return "Uncategorised"
 
     const matchedCategory = categories.find(catName =>
       selectedCategories.some(selected => selected.name === catName),
@@ -97,6 +103,8 @@ export function FlashcardDisplay({
   const backgroundCardColor = showAnswer ? "bg-blue400" : "bg-pink400"
 
   const containerHeight = type === "mcq" ? "h-[460px]" : "h-[400px]"
+
+  const isMastered = currentStep >= totalSteps
 
   return (
     <div
@@ -211,8 +219,8 @@ export function FlashcardDisplay({
             <Button
               onClick={() => {}}
               text={`Mastered ${currentStep}/${totalSteps}`}
-              className="px-2.5 py-1.5 bg-teal400 text-preset6 font-poppins hover:translate-y-0 hover:shadow-none cursor-default"
-              iconPosition={"start"}
+              className="bg-teal400 px-4 py-1.5 text-preset6 font-bold hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-default shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              iconPosition="start"
               icon={<MasteredIcon />}
             />
           )}
@@ -227,11 +235,15 @@ export function FlashcardDisplay({
 
       <div className="flex flex-row gap-5 pt-5 items-center justify-center shrink-0">
         <Button
-          text={"I Know This"}
+          text={isMastered ? "Already Mastered" : "I Know This"}
           onClick={onReview}
           iconPosition={"start"}
           icon={<TickIcon />}
-          className="bg-yellow500 cursor-pointer"
+          className={cn(
+            "bg-yellow500 cursor-pointer",
+            isMastered && "opacity-50 cursor-not-allowed",
+          )}
+          disabled={isMastered}
         />
         <Button
           text={"Reset Progress"}
