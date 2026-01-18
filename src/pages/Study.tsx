@@ -11,6 +11,7 @@ import { FlashcardHeader } from "../components/flashcards/FlashcardHeader.tsx"
 import { FlashcardFooter } from "../components/flashcards/FlashcardFooter.tsx"
 import { apiService } from "../services/api.ts"
 import { CategoryDropdown } from "../components/dropdowns/CategoryDropdown.tsx"
+import { Button } from "../components/buttons/Button.tsx"
 
 export function Study(): JSX.Element {
   const { id } = useParams<{ id: string }>()
@@ -31,6 +32,8 @@ export function Study(): JSX.Element {
 
   const [showAnswer, setShowAnswer] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fetchedCard, setFetchedCard] = useState<any>(null)
+  const [isLocalLoading, setIsLocalLoading] = useState(false)
   const [showCategories, setShowCategories] = useState(false)
 
   const filteredFlashcards = useMemo(() => {
@@ -49,15 +52,38 @@ export function Study(): JSX.Element {
     })
   }, [flashcards, selectedCategories, hideMastered])
 
-  const card = useMemo(() => {
-    return filteredFlashcards.find(f => f.id === Number(id))
-  }, [filteredFlashcards, id])
-
   useEffect(() => {
-    if (!contextLoading && !card && filteredFlashcards.length > 0) {
+    if (!contextLoading && !id && filteredFlashcards.length > 0) {
       navigate(`/study/${filteredFlashcards[0].id}`, { replace: true })
     }
-  }, [card, filteredFlashcards, contextLoading, navigate])
+  }, [id, filteredFlashcards, contextLoading, navigate])
+
+  const card = useMemo(() => {
+    const contextCard = filteredFlashcards.find(f => f.id === Number(id))
+    return contextCard || fetchedCard
+  }, [filteredFlashcards, id, fetchedCard])
+
+  useEffect(() => {
+    if (!contextLoading && !card && id) {
+      const fetchIndividualCard = async () => {
+        setIsLocalLoading(true)
+        try {
+          const response = await apiService.getById(id)
+          if (response.ok) {
+            const data = await response.json()
+            setFetchedCard(data)
+          } else {
+            setError("Card not found.")
+          }
+        } catch (err) {
+          setError("Failed to load the card.")
+        } finally {
+          setIsLocalLoading(false)
+        }
+      }
+      fetchIndividualCard()
+    }
+  }, [id, card, contextLoading])
 
   const handleNavigation = (direction: "next" | "prev") => {
     if (!filteredFlashcards.length) return
@@ -105,8 +131,23 @@ export function Study(): JSX.Element {
       </div>
     )
   }
-  if (!card) {
+  if (isLocalLoading || (contextLoading && !card)) {
     return <div className="p-10">Finding card...</div>
+  }
+
+  if (!card && !isLocalLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[631px] w-full border-1 border-neutral900 rounded-20 bg-neutral0">
+        <p className="text-preset3 text-neutral600">
+          This card doesn't exist or you don't have access.
+        </p>
+        <Button
+          text="Go Back"
+          onClick={() => navigate("/list")}
+          className="mt-4 bg-yellow500"
+        />
+      </div>
+    )
   }
 
   const currentPos = filteredFlashcards.findIndex(f => f.id === Number(id)) + 1
