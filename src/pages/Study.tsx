@@ -12,10 +12,14 @@ import { FlashcardFooter } from "../components/flashcards/FlashcardFooter.tsx"
 import { apiService } from "../services/api.ts"
 import { CategoryDropdown } from "../components/dropdowns/CategoryDropdown.tsx"
 import { Button } from "../components/buttons/Button.tsx"
+import { useSnackbar } from "../context/SnackbarContext.tsx"
+import { Modal } from "../components/modals/Modal.tsx"
 
 export function Study(): JSX.Element {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+
+  const { showSnackbar } = useSnackbar()
 
   const {
     flashcards,
@@ -36,10 +40,11 @@ export function Study(): JSX.Element {
   const [fetchedCard, setFetchedCard] = useState<any>(null)
   const [isLocalLoading, setIsLocalLoading] = useState(false)
   const [showCategories, setShowCategories] = useState(false)
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false)
 
   useEffect(() => {
     refreshData(true, 1, 1000)
-      
+
     return () => {
       refreshData(false, 1, 12)
     }
@@ -157,14 +162,21 @@ export function Study(): JSX.Element {
     }
   }
 
-  const handleReset = async (e: React.MouseEvent) => {
+  const handleResetClick = (e: MouseEvent) => {
     e.stopPropagation()
-    if (!window.confirm("Are you sure?")) return
+    setIsResetModalOpen(true)
+  }
+
+  const confirmReset = async () => {
     try {
       await apiService.reset(id!)
       await refreshData(true)
+
+      showSnackbar("Progress reset successfully!")
     } catch (err) {
-      console.error("Failed to reset progress:", err)
+      showSnackbar("Failed to reset progress.")
+    } finally {
+      setIsResetModalOpen(false) 
     }
   }
 
@@ -248,7 +260,7 @@ export function Study(): JSX.Element {
             showAnswer={showAnswer}
             onToggle={() => setShowAnswer(!showAnswer)}
             onReview={handleReview}
-            onReset={handleReset}
+            onReset={handleResetClick}
           />
 
           <FlashcardFooter
@@ -290,6 +302,34 @@ export function Study(): JSX.Element {
             />
           </div>
         </div>
+
+        <Modal
+          isOpen={isResetModalOpen}
+          onClose={() => setIsResetModalOpen(false)}
+          title="Reset Progress"
+          type="delete"
+          size="md"
+        >
+          <div className="flex flex-col gap-6 pb-6">
+            <p className="text-preset3 text-neutral600">
+              Are you sure you want to reset your progress for this card? This
+              will return it to the "Not Started" state.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                text="Cancel"
+                onClick={() => setIsResetModalOpen(false)}
+                className="bg-neutral100 text-neutral900"
+              />
+              <Button
+                text="Reset Progress"
+                onClick={confirmReset}
+                className="bg-yellow500 cursor-pointer border-neutral900 border-1 rounded-12 text-preset3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none transition-all disabled:opacity-50"
+              />
+            </div>
+          </div>
+        </Modal>
       </div>
     )
   }
