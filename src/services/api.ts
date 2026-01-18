@@ -94,4 +94,21 @@ export const apiService = {
 
     return data
   },
+
+  async updateFlashcard(id: string | number, flashcard: FlashcardFormValues) {
+    const data = await apiRequest(`/flashcards/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(flashcard),
+    })
+
+    return data
+  },
+
+  async deleteFlashcard(id: string | number) {
+    const data = await apiRequest(`/flashcards/${id}`, {
+      method: "DELETE",
+    })
+
+    return data
+  },
 }

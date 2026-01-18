@@ -21,7 +21,7 @@ export const flashcardSchema = z.discriminatedUnion("flashcard_type", [
     flashcard_type: z.literal("mcq"),
     flashcard_content: z.object({
       options: z.array(z.string()).min(2, "At least 2 options required"),
-      correct_index: z.number().int(),
+      correct_index: z.coerce.number().int().min(0),
       justification: z.string().optional(),
     }),
   }),
