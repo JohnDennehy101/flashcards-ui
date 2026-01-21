@@ -11,6 +11,7 @@ import { Modal } from "../../components/modals/Modal.tsx"
 import { Category } from "@/context/FlashcardContext.tsx"
 import { twMerge } from "tailwind-merge"
 import { clsx, ClassValue } from "clsx"
+import {formatOcrText} from "../../utils/text.ts";
 
 interface FlashcardDisplayProps {
   type: "qa" | "mcq" | "yes_no"
@@ -63,7 +64,7 @@ export function FlashcardDisplay({
     if (!content) return ""
     switch (type) {
       case "qa":
-        return content.answer
+        return formatOcrText(content.answer)
       case "yes_no":
         return `${content.correct ? "YES" : "NO"}`
       case "mcq":
@@ -73,26 +74,30 @@ export function FlashcardDisplay({
     }
   }
 
-  const getHighlightedText = (text: string, highlight: string) => {
-    if (!highlight || !text) return text
-    const parts = text.split(new RegExp(`(${highlight})`, "gi"))
-    return (
-      <span>
-        {parts.map((part, i) =>
+    const getHighlightedText = (text: string, highlight: string) => {
+        if (!highlight.trim() || !text) return text;
+
+        const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        const parts = text.split(new RegExp(`(${escapedHighlight})`, "gi"));
+
+        return (
+            <span>
+      {parts.map((part, i) =>
           part.toLowerCase() === highlight.toLowerCase() ? (
-            <mark
-              key={i}
-              className="bg-yellow500 text-neutral900 rounded-sm px-1 font-bold"
-            >
-              {part}
-            </mark>
+              <mark
+                  key={i}
+                  className="bg-yellow-500 text-neutral-900 rounded-sm px-1 font-bold"
+              >
+                  {part}
+              </mark>
           ) : (
-            part
-          ),
-        )}
-      </span>
-    )
-  }
+              part
+          )
+      )}
+    </span>
+        );
+    };
 
   const isMcq = type === "mcq"
 
@@ -266,7 +271,7 @@ export function FlashcardDisplay({
               Justification
             </h4>
             <p className="p-4 bg-blue50 border border-neutral900 rounded-12 italic text-neutral900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-              {content.justification}
+              {formatOcrText(content.justification)}
             </p>
           </div>
 
@@ -276,7 +281,7 @@ export function FlashcardDisplay({
                 Source Context
               </h4>
               <div className="p-4 border border-neutral900 rounded-12 bg-neutral0 leading-relaxed text-neutral900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] max-h-[300px] overflow-y-auto">
-                {getHighlightedText(content.text, content.justification)}
+                {getHighlightedText(formatOcrText(content.text), formatOcrText(content.justification))}
               </div>
             </div>
           )}
