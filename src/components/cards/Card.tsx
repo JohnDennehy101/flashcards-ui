@@ -5,6 +5,7 @@ import { CardMenu } from "../../components/menus/CardMenu.tsx"
 import { Button } from "../../components/buttons/Button.tsx"
 import MasteredIcon from "../../assets/images/icon-mastered.svg?react"
 import { Category } from "@/context/FlashcardContext.tsx"
+import {formatOcrText} from "../../utils/text.ts";
 
 interface CardProps {
   id: string
@@ -80,7 +81,7 @@ export function Card({
       </div>
       <div className="p-4 flex flex-col gap-4 border-t flex-1">
         <h3 className="text-preset5 text-neutral-900">Answer:</h3>
-        <p className="text-preset5">{answer}</p>
+        <p className="text-preset5">{formatOcrText(answer)}</p>
       </div>
       <div className="flex justify-between gap-4 border-t">
         <div className="flex items-center p-2.5 gap-1.5 border-r border-neutral900 bg-neutral50/50">
