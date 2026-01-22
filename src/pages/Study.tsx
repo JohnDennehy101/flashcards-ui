@@ -176,7 +176,7 @@ export function Study(): JSX.Element {
     } catch (err) {
       showSnackbar("Failed to reset progress.")
     } finally {
-      setIsResetModalOpen(false) 
+      setIsResetModalOpen(false)
     }
   }
 

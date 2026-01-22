@@ -11,7 +11,7 @@ import { Modal } from "../../components/modals/Modal.tsx"
 import { Category } from "@/context/FlashcardContext.tsx"
 import { twMerge } from "tailwind-merge"
 import { clsx, ClassValue } from "clsx"
-import {formatOcrText} from "../../utils/text.ts";
+import { formatOcrText } from "../../utils/text.ts"
 
 interface FlashcardDisplayProps {
   type: "qa" | "mcq" | "yes_no"
@@ -74,30 +74,30 @@ export function FlashcardDisplay({
     }
   }
 
-    const getHighlightedText = (text: string, highlight: string) => {
-        if (!highlight.trim() || !text) return text;
+  const getHighlightedText = (text: string, highlight: string) => {
+    if (!highlight.trim() || !text) return text
 
-        const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
-        const parts = text.split(new RegExp(`(${escapedHighlight})`, "gi"));
+    const parts = text.split(new RegExp(`(${escapedHighlight})`, "gi"))
 
-        return (
-            <span>
-      {parts.map((part, i) =>
+    return (
+      <span>
+        {parts.map((part, i) =>
           part.toLowerCase() === highlight.toLowerCase() ? (
-              <mark
-                  key={i}
-                  className="bg-yellow-500 text-neutral-900 rounded-sm px-1 font-bold"
-              >
-                  {part}
-              </mark>
+            <mark
+              key={i}
+              className="bg-yellow-500 text-neutral-900 rounded-sm px-1 font-bold"
+            >
+              {part}
+            </mark>
           ) : (
-              part
-          )
-      )}
-    </span>
-        );
-    };
+            part
+          ),
+        )}
+      </span>
+    )
+  }
 
   const isMcq = type === "mcq"
 
@@ -281,7 +281,10 @@ export function FlashcardDisplay({
                 Source Context
               </h4>
               <div className="p-4 border border-neutral900 rounded-12 bg-neutral0 leading-relaxed text-neutral900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] max-h-[300px] overflow-y-auto">
-                {getHighlightedText(formatOcrText(content.text), formatOcrText(content.justification))}
+                {getHighlightedText(
+                  formatOcrText(content.text),
+                  formatOcrText(content.justification),
+                )}
               </div>
             </div>
           )}

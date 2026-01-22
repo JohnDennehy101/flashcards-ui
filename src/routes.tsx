@@ -1,14 +1,14 @@
-import { Home } from "./pages/Home"
 import { Study } from "./pages/Study"
 import { List } from "./pages/List"
 import { Login } from "./pages/Login"
+import { Navigate } from "react-router-dom"
 
 export const routes = [
   {
     path: "/",
-    element: <Home />,
+    element: <Navigate to="/list" replace />,
     showHeader: true,
-    protected: false,
+    protected: true,
   },
   {
     path: "/study/:id",

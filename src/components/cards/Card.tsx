@@ -5,7 +5,7 @@ import { CardMenu } from "../../components/menus/CardMenu.tsx"
 import { Button } from "../../components/buttons/Button.tsx"
 import MasteredIcon from "../../assets/images/icon-mastered.svg?react"
 import { Category } from "@/context/FlashcardContext.tsx"
-import {formatOcrText} from "../../utils/text.ts";
+import { formatOcrText } from "../../utils/text.ts"
 
 interface CardProps {
   id: string
