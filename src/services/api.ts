@@ -1,7 +1,7 @@
 import { LoginFormValues } from "../schemas/login.ts"
 import { FlashcardFormValues } from "@/schemas/flashcard.ts"
 
-const BASE_URL = "http://localhost:4000/v1"
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers)
