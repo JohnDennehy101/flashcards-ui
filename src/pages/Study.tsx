@@ -10,7 +10,7 @@ import { FlashcardDisplay } from "../components/flashcards/FlashcardDisplay.tsx"
 import { FlashcardHeader } from "../components/flashcards/FlashcardHeader.tsx"
 import { FlashcardFooter } from "../components/flashcards/FlashcardFooter.tsx"
 import { apiService } from "../services/api.ts"
-import { CategoryDropdown } from "../components/dropdowns/CategoryDropdown.tsx"
+import { FilterDropdown } from "../components/dropdowns/FilterDropdown.tsx"
 import { Button } from "../components/buttons/Button.tsx"
 import { useSnackbar } from "../context/SnackbarContext.tsx"
 import { Modal } from "../components/modals/Modal.tsx"
@@ -33,13 +33,18 @@ export function Study(): JSX.Element {
     hideMastered,
     setHideMastered,
     shuffleCards,
+    selectedFile,
+    selectedType,
+    setSelectedFile,
+    setSelectedSection,
+    setSelectedType,
   } = useFlashcards()
 
   const [showAnswer, setShowAnswer] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fetchedCard, setFetchedCard] = useState<any>(null)
   const [isLocalLoading, setIsLocalLoading] = useState(false)
-  const [showCategories, setShowCategories] = useState(false)
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [isResetModalOpen, setIsResetModalOpen] = useState(false)
 
   useEffect(() => {
@@ -188,13 +193,16 @@ export function Study(): JSX.Element {
       <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[631px] w-full lg:px-24 md:px-8 px-4 py-4">
         <div className="flex flex-col items-center justify-center h-full w-full border-1 border-neutral900 rounded-20 bg-neutral0 shadow-sm">
           <p className="text-preset3 text-neutral600 text-center px-6">
-            No cards match your filters in this category.
+            No cards match your filters.
           </p>
           <Button
-            text="Reset Filters"
+            text="Clear All Filters"
             onClick={() => {
               setHideMastered(false)
               setSelectedCategories([])
+              setSelectedFile("")
+              setSelectedSection("")
+              setSelectedType("")
             }}
             className="mt-4 bg-yellow500 hover:bg-yellow-600 transition-colors"
           />
@@ -221,12 +229,12 @@ export function Study(): JSX.Element {
         <div className="bg-neutral0 lg:w-2/3 h-fit lg:h-full flex items-center justify-between flex-col w-full border-1 border-neutral900 rounded-20 overflow-hidden">
           <FlashcardHeader
             selectedCategory={
-              selectedCategories.length > 0
-                ? `${selectedCategories.length} Selected`
-                : "All Categories"
+              selectedFile || selectedType || selectedCategories.length > 0
+                ? "Filters Active"
+                : "All Filters"
             }
             hideMastered={hideMastered}
-            onCategoryClick={() => setShowCategories(!showCategories)}
+            onCategoryClick={() => setShowFilterPanel(!showFilterPanel)}
             onShuffleClick={() => {
               shuffleCards()
               if (flashcards.length > 0) {
@@ -237,16 +245,10 @@ export function Study(): JSX.Element {
               setHideMastered(checked)
             }
           >
-            {showCategories && (
-              <div className="absolute top-full left-0 z-50 mt-2">
-                <CategoryDropdown
-                  categories={categories}
-                  selectedCategories={selectedCategories}
-                  onToggle={toggleCategory}
-                  onClear={() => setSelectedCategories([])}
-                />
-              </div>
-            )}
+            <FilterDropdown
+              isOpen={showFilterPanel}
+              setIsOpen={setShowFilterPanel}
+            />
           </FlashcardHeader>
 
           <FlashcardDisplay

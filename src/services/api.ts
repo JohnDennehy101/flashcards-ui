@@ -54,6 +54,9 @@ export const apiService = {
     categories = "",
     hideMastered = false,
     currentSort = "id",
+    file = "",
+    section = "",
+    qType = "",
   ) => {
     const query: Record<string, string> = {
       page: page.toString(),
@@ -63,6 +66,9 @@ export const apiService = {
 
     if (categories) query.categories = categories
     if (hideMastered) query.hide_mastered = "true"
+    if (file) query.file = file
+    if (section) query.section = section
+    if (qType) query.flashcard_type = qType
 
     const params = new URLSearchParams(query)
     const response = await apiRequest(`/flashcards?${params.toString()}`)
@@ -90,13 +96,6 @@ export const apiService = {
       method: "POST",
     })
     return await res.json()
-  },
-
-  async getCategories(hideMastered = false) {
-    const response = await apiRequest(
-      `/categories?hide_mastered=${hideMastered}`,
-    )
-    return await response.json()
   },
 
   async createFlashcard(flashcard: FlashcardFormValues) {

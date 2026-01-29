@@ -30,6 +30,13 @@ export interface Category {
   count: number
 }
 
+export interface FilterOptions {
+  categories: Category[]
+  source_files: string[]
+  sections: string[]
+  question_types: string[]
+}
+
 interface FlashcardContextType {
   metadata: Metadata | null
   flashcards: any[]
@@ -48,6 +55,15 @@ interface FlashcardContextType {
   setHideMastered: Dispatch<SetStateAction<boolean>>
   setFlashcards: Dispatch<SetStateAction<any[]>>
   shuffleCards: () => void
+  availableFiles: string[]
+  availableSections: string[]
+  availableTypes: string[]
+  selectedFile: string
+  setSelectedFile: (file: string) => void
+  selectedSection: string
+  setSelectedSection: (section: string) => void
+  selectedType: string
+  setSelectedType: (type: string) => void
 }
 
 const FlashcardContext = createContext<FlashcardContextType | undefined>(
@@ -64,6 +80,13 @@ export function FlashcardProvider({ children }: { children: React.ReactNode }) {
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
   const [hideMastered, setHideMastered] = useState(false)
   const [sort, setSort] = useState<string>("id")
+  const [availableFiles, setAvailableFiles] = useState<string[]>([])
+  const [availableSections, setAvailableSections] = useState<string[]>([])
+  const [availableTypes, setAvailableTypes] = useState<string[]>([])
+
+  const [selectedFile, setSelectedFile] = useState("")
+  const [selectedSection, setSelectedSection] = useState("")
+  const [selectedType, setSelectedType] = useState("")
 
   const pageSizeRef = useRef(12)
   const isFetchingRef = useRef(false)
@@ -76,11 +99,7 @@ export function FlashcardProvider({ children }: { children: React.ReactNode }) {
   const loadData = useCallback(
     async (force = false, page = 1, customPageSize?: number) => {
       if (isFetchingRef.current) return
-
-      if (customPageSize !== undefined) {
-        pageSizeRef.current = customPageSize
-      }
-
+      if (customPageSize !== undefined) pageSizeRef.current = customPageSize
       if (!force && hasInitializedRef.current) {
         setIsLoading(false)
         return
@@ -93,27 +112,30 @@ export function FlashcardProvider({ children }: { children: React.ReactNode }) {
 
         const catNames = selectedCategories.map(c => c.name).join(",")
 
-        const [cardsData, statsData, categoriesData] = await Promise.all([
+        const [res, statsData] = await Promise.all([
           apiService.getAll(
             page,
             pageSizeRef.current,
             catNames,
             hideMastered,
             sort,
+            selectedFile,
+            selectedSection,
+            selectedType,
           ),
           apiService.getStats(),
-          apiService.getCategories(hideMastered),
         ])
 
-        setFlashcards(prev => {
-          return page === 1
-            ? cardsData.flashcards
-            : [...prev, ...cardsData.flashcards]
-        })
+        const { flashcards: newCards, metadata: newMeta, filter_options } = res
 
+        setFlashcards(prev => (page === 1 ? newCards : [...prev, ...newCards]))
         setStats(statsData)
-        setCategories(categoriesData.categories)
-        setMetadata(cardsData.metadata)
+        setMetadata(newMeta)
+
+        setCategories(filter_options.categories)
+        setAvailableFiles(filter_options.source_files)
+        setAvailableSections(filter_options.sections)
+        setAvailableTypes(filter_options.question_types)
 
         hasInitializedRef.current = true
       } catch (err) {
@@ -124,12 +146,27 @@ export function FlashcardProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     },
-    [selectedCategories, hideMastered, sort],
+    [
+      selectedCategories,
+      hideMastered,
+      sort,
+      selectedFile,
+      selectedSection,
+      selectedType,
+    ],
   )
 
   useEffect(() => {
     loadData(true, 1)
-  }, [selectedCategories, hideMastered, sort, loadData])
+  }, [
+    selectedCategories,
+    hideMastered,
+    sort,
+    selectedFile,
+    selectedSection,
+    selectedType,
+    loadData,
+  ])
 
   return (
     <FlashcardContext.Provider
@@ -147,6 +184,15 @@ export function FlashcardProvider({ children }: { children: React.ReactNode }) {
         hideMastered,
         setHideMastered,
         shuffleCards,
+        availableFiles,
+        availableSections,
+        availableTypes,
+        selectedFile,
+        setSelectedFile,
+        selectedSection,
+        setSelectedSection,
+        selectedType,
+        setSelectedType,
       }}
     >
       {children}
