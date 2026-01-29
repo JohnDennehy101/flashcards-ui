@@ -1,4 +1,4 @@
-import { JSX, useEffect, useMemo, useState } from "react"
+import { JSX, useEffect, useState } from "react"
 import { FlashcardForm } from "../components/forms/FlashcardForm"
 import { Button } from "../components/buttons/Button.tsx"
 import PlusIcon from "../assets/images/icon-circle-plus.svg?react"
@@ -6,8 +6,8 @@ import CrossIcon from "../assets/images/icon-cross.svg?react"
 import ShuffleIcon from "../assets/images/icon-shuffle.svg?react"
 import ChevronDownIcon from "../assets/images/icon-chevron-down.svg?react"
 import { Card } from "../components/cards/Card.tsx"
-import { Category, useFlashcards } from "../context/FlashcardContext.tsx"
-import { CategoryDropdown } from "../components/dropdowns/CategoryDropdown.tsx"
+import { FilterDropdown } from "../components/dropdowns/FilterDropdown.tsx"
+import { useFlashcards } from "../context/FlashcardContext.tsx"
 import { Modal } from "../components/modals/Modal.tsx"
 import { apiService } from "../services/api.ts"
 import { useSnackbar } from "../context/SnackbarContext.tsx"
@@ -20,7 +20,8 @@ type ActiveAction =
 
 export function List(): JSX.Element {
   const [activeAction, setActiveAction] = useState<ActiveAction>(null)
-  const [showCategories, setShowCategories] = useState(false)
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
+
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
 
   const { showSnackbar } = useSnackbar()
@@ -47,32 +48,16 @@ export function List(): JSX.Element {
     flashcards,
     metadata,
     isLoading,
-    categories,
     selectedCategories,
-    setSelectedCategories,
     hideMastered,
     setHideMastered,
     shuffleCards,
     refreshData,
+    selectedType,
+    selectedFile,
   } = useFlashcards()
 
   const handleCloseAction = () => setActiveAction(null)
-
-  const toggleCategory = (categoryName: string) => {
-    setSelectedCategories((prev: Category[]) => {
-      const isAlreadySelected = prev.some(
-        (c: Category) => c.name === categoryName,
-      )
-      if (isAlreadySelected) {
-        return prev.filter((c: Category) => c.name !== categoryName)
-      } else {
-        const categoryObject = categories.find(
-          (c: Category) => c.name === categoryName,
-        )
-        return categoryObject ? [...prev, categoryObject] : prev
-      }
-    })
-  }
 
   const handleDelete = async () => {
     if (activeAction?.type !== "delete") return
@@ -112,27 +97,32 @@ export function List(): JSX.Element {
     <div className="flex flex-col items-start bg-neutral-0 w-full min-h-screen lg:px-24 md:px-8 px-4 py-3 gap-6">
       <div className="flex justify-between items-center w-full">
         <div className="flex gap-3 items-center">
-          <div className="relative p-2.5 py-4 flex items-center">
+          <div
+            className="relative p-2.5 py-4 flex items-center"
+            data-dropdown-container
+          >
             <Button
-              onClick={() => setShowCategories(!showCategories)}
+              onClick={() => setShowFilterPanel(!showFilterPanel)}
               text={
                 <span className="hidden md:inline">
-                  {selectedCategories.length > 0
-                    ? `${selectedCategories.length} Selected`
-                    : "All Categories"}
+                  {selectedFile || selectedType || selectedCategories.length > 0
+                    ? "Filters Active"
+                    : "All Filters"}
                 </span>
               }
-              icon={<ChevronDownIcon />}
+              icon={
+                <ChevronDownIcon
+                  className={showFilterPanel ? "rotate-180" : ""}
+                />
+              }
               iconPosition={"end"}
+              className={selectedFile || selectedType ? "border-yellow500" : ""}
             />
-            {showCategories && (
-              <CategoryDropdown
-                categories={categories}
-                selectedCategories={selectedCategories}
-                onToggle={categoryName => toggleCategory(categoryName)}
-                onClear={() => setSelectedCategories([])}
-              />
-            )}
+
+            <FilterDropdown
+              isOpen={showFilterPanel}
+              setIsOpen={setShowFilterPanel}
+            />
           </div>
 
           <Button
