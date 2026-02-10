@@ -147,10 +147,10 @@ export function FlashcardDisplay({
           <div
             className={`absolute inset-0 flex flex-col items-center px-6 transition-all duration-200
     ${showAnswer ? "translate-y-8 opacity-0 pointer-events-auto" : "translate-y-0 opacity-100 pointer-events-none"}
-    ${type === "mcq" ? "justify-start pt-18" : "justify-center"}`}
+    ${type === "mcq" ? "justify-start pt-16" : "justify-center"}`}
           >
             <div
-              className={`w-full flex items-center justify-center ${type === "mcq" ? "mb-2" : ""}`}
+              className={`w-full flex items-center justify-center ${type === "mcq" ? "mb-0.5" : ""}`}
             >
               <p
                 className={`${questionTextSize} font-poppins text-neutral900 text-center leading-[1.1]`}
@@ -161,13 +161,13 @@ export function FlashcardDisplay({
 
             {type === "mcq" ? (
               <>
-                <div className="w-full flex flex-col gap-1.5 z-20">
+                <div className="w-full flex flex-col gap-1 z-20">
                   {content.options
                     ?.slice(0, 4)
                     .map((opt: string, i: number) => (
                       <div
                         key={i}
-                        className="w-full px-4 py-1.5 border border-neutral900/15 rounded-12 bg-neutral0/20"
+                        className="w-full px-4 py-1.25 border border-neutral900/15 rounded-12 bg-neutral0/20"
                       >
                         <p className="text-[11px] md:text-[12px] font-poppins text-center leading-tight text-neutral900">
                           {opt}
@@ -176,7 +176,7 @@ export function FlashcardDisplay({
                     ))}
                 </div>
                 {!isMcq && (
-                  <div className="absolute bottom-12 w-full flex justify-center pointer-events-none">
+                  <div className="absolute bottom-10 w-full flex justify-center pointer-events-none">
                     <p className="text-preset4 font-poppins text-neutral900 text-center">
                       {"Click to reveal answer"}
                     </p>
