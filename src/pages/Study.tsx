@@ -143,7 +143,6 @@ export function Study(): JSX.Element {
     navigate(`/study/${flashcards[nextIndex].id}`)
   }
 
-  const toggleCategory = (categoryName: string) => {
   const handleReview = async (e: React.MouseEvent) => {
     e.stopPropagation()
     try {
