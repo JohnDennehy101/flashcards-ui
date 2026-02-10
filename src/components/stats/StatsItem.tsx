@@ -14,7 +14,7 @@ export function StatsItem({
   iconBgColor,
 }: StatsItemProps): JSX.Element {
   return (
-    <div className="w-full h-29 flex border-1 border-neutral900 rounded-12 overflow-hidden bg-white">
+    <div className="w-full h-31.5 flex border-1 border-neutral900 rounded-12 overflow-hidden bg-white">
       <div className="w-3/4 flex flex-col gap-3 justify-center border-r-1 border-neutral900">
         <p className="text-preset4 font-poppins text-neutral900 px-5">
           {label}

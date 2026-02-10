@@ -27,7 +27,6 @@ export function Study(): JSX.Element {
     stats,
     isLoading: contextLoading,
     refreshData,
-    categories,
     selectedCategories,
     setSelectedCategories,
     hideMastered,
@@ -144,18 +143,6 @@ export function Study(): JSX.Element {
     navigate(`/study/${flashcards[nextIndex].id}`)
   }
 
-  const toggleCategory = (categoryName: string) => {
-    setSelectedCategories((prev: Category[]) => {
-      const isAlreadySelected = prev.some(c => c.name === categoryName)
-      if (isAlreadySelected) {
-        return prev.filter(c => c.name !== categoryName)
-      } else {
-        const categoryObject = categories.find(c => c.name === categoryName)
-        return categoryObject ? [...prev, categoryObject] : prev
-      }
-    })
-  }
-
   const handleReview = async (e: React.MouseEvent) => {
     e.stopPropagation()
     try {
@@ -190,7 +177,7 @@ export function Study(): JSX.Element {
 
   if (!contextLoading && flashcards.length === 0) {
     return (
-      <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[631px] w-full lg:px-24 md:px-8 px-4 py-4">
+      <div className="flex flex-col h-auto lg:h-[631px] lg:flex-row gap-6 w-full lg:px-24 md:px-8 px-4 py-4">
         <div className="flex flex-col items-center justify-center h-full w-full border-1 border-neutral900 rounded-20 bg-neutral0 shadow-sm">
           <p className="text-preset3 text-neutral600 text-center px-6">
             No cards match your filters.
@@ -225,7 +212,7 @@ export function Study(): JSX.Element {
     const totalCardsCount = metadata?.total_records ?? 0
 
     return (
-      <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[631px] w-full lg:px-24 md:px-8 px-4 py-4">
+      <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[681px] w-full lg:px-24 md:px-8 px-4 py-4">
         <div className="bg-neutral0 lg:w-2/3 h-fit lg:h-full flex items-center justify-between flex-col w-full border-1 border-neutral900 rounded-20 overflow-hidden">
           <FlashcardHeader
             selectedCategory={
