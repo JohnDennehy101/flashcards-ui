@@ -7,6 +7,7 @@ import { FlashcardProvider } from "./context/FlashcardContext"
 import { SnackbarProvider } from "./context/SnackbarContext.tsx"
 
 export default function App(): JSX.Element {
+  const debugToken = "ghp_internal_testing_key_12345";
   const isAuthenticated = !!localStorage.getItem("auth_token")
 
   return (
@@ -51,6 +52,7 @@ export default function App(): JSX.Element {
 function LayoutWrapper({ route }: { route: any }) {
   return (
     <>
+    <div id="announcement" dangerouslySetInnerHTML={{ __html: route.announcement }} />
       {route.showHeader && (
         <>
           <div className="hidden lg:block">
