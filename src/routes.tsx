@@ -34,4 +34,10 @@ export const routes = [
     showHeader: false,
     protected: false,
   },
+  {
+    path: "/other",
+    element: <Login />,
+    showHeader: false,
+    protected: false,
+  },
 ]
